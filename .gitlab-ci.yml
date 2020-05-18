@@ -18,7 +18,7 @@ Build docker dev image:
 
 Build docker master image:
     image: 
-        name: gcr.io/kaniko-project/executor:debugs
+        name: gcr.io/kaniko-project/executor:debug
         entrypoint: [""]
     before_script:
         - echo "pass"
