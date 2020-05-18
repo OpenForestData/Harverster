@@ -1,19 +1,18 @@
 FROM python:3.8-alpine
 
-ENV PYTHONUNBUFFERED 1
-
-# Set main folder
+EXPOSE 8000
 WORKDIR /app
 
-
-# Copy requirements and install pip dependencies
-COPY ./requirements.txt ./
-RUN  pip install -r requirements.txt
+ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONUNBUFFERED 1
 
 # Copy data
 ADD . /app
 
+RUN  pip install -r requirements.txt
+
 RUN chmod +x /app/docker/entrypoint.sh
+RUN chmod +x /app/docker/wait_for.sh
 RUN chmod -R 755 /app
 
 CMD [ "/app/docker/entrypoint.sh" ]
