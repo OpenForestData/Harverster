@@ -1,0 +1,48 @@
+version: '3'
+
+services:
+  db:
+    container_name: harvester-db
+    image: mongo:latest
+    volumes:
+      - init_db:/docker-entrypoint-initdb.d
+      - mongo_data:/data/db
+    environment:
+      - MONGO_INITDB_DATABASE=harvester
+      - MONGO_INITDB_ROOT_USERNAME=harvester
+      - MONGO_INITDB_ROOT_PASSWORD=harvester_password
+    ports:
+      - 27017:27017
+    networks:
+      - harvester_network
+
+  backend:
+    container_name: harvester-backend
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - DEBUG=True
+      - HOST_URL=0.0.0.0
+      - SECRET_KEY=abctest
+      - API_PORT=8888
+      - DB_ENGINE=djongo
+      - DB_DATABASE=harvester
+      - DB_USER=harvester
+      - DB_PASSWORD=harvester_password
+    depends_on:
+      - db
+    ports:
+      - 8888:8888
+    networks:
+      - harvester_network
+
+# volumes definiton
+volumes:
+  init_db:
+  mongo_data:
+
+# network definition
+networks:
+  harvester_network:
+    driver: bridge
