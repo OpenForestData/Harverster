@@ -3,11 +3,11 @@
 import os
 import sys
 
-import dotenv
-
 
 def main():
-    dotenv.read_dotenv()
+    if os.environ.get('READ_DOT_ENV'):
+        from dotenv import load_dotenv
+        load_dotenv()
 
     os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'harvester.settings')
     try:

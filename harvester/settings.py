@@ -13,9 +13,9 @@ https://docs.djangoproject.com/en/2.2/ref/settings/
 import os
 from ast import literal_eval
 
-import dotenv
-
-dotenv.read_dotenv()
+if os.environ.get('READ_DOT_ENV'):
+    from dotenv import load_dotenv
+    load_dotenv(dotenv_path='../')
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
