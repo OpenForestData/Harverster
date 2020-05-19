@@ -1,4 +1,4 @@
-FROM python:3.8-alpine
+FROM python:3.8-slim-buster
 
 EXPOSE 8000
 WORKDIR /app
@@ -6,7 +6,9 @@ WORKDIR /app
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
 
-RUN apk add --no-cache git
+RUN apt-get update \
+    && apt-get install -y \
+    git
 
 # Copy data
 ADD . /app

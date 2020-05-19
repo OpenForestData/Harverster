@@ -48,7 +48,7 @@ services:
     container_name: "harvester_redis"
     image: "redis:6-alpine"
     restart: unless-stopped
-    networks:
+    networks: 
       - harvester_network
 
   harvester_backend: &harvester_backend
@@ -80,12 +80,13 @@ services:
     image: "harvester_celery"
     container_name: "harvester_celery"
     labels: []
-    command: 'sh -c "cd /app && celery -A harvester worker -l=INFO"'
+    command: 'bash -c "/app/docker/entrypoint-celery.sh"'
 
 # volumes definiton
 volumes:
   init_db:
   mongo_data:
+  redis_data:
 
 # network definition
 networks:
