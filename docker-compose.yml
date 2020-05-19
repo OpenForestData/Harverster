@@ -51,15 +51,7 @@ services:
       dockerfile: Dockerfile
     restart: unless-stopped
     environment:
-      - DEBUG=True
-      - HOST_URL=0.0.0.0
-      - SECRET_KEY=abctest
-      - API_PORT=8000
-      - DB_HOST=harvester_db
-      - DB_ENGINE=djongo
-      - DB_DATABASE=harvester
-      - DB_USER=harvester
-      - DB_PASSWORD=harvester_password
+      - READ_DOR_ENV=true
     labels:
       - traefik.enable=true
       - traefik.http.routers.harvester_backend.rule=Host(`${URL}`)
