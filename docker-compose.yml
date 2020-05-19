@@ -44,7 +44,14 @@ services:
     networks:
       - harvester_network
 
-  harvester_backend:
+  harvester_redis:
+    container_name: "harvester_redis"
+    image: "redis:6-alpine"
+    restart: unless-stopped
+    networks:
+      - harvester_network
+
+  harvester_backend: &harvester_backend
     container_name: "harvester_backend"
     build:
       context: .
@@ -52,6 +59,8 @@ services:
     restart: unless-stopped
     environment:
       - READ_DOR_ENV=true
+    env_file:
+      - example.env
     labels:
       - traefik.enable=true
       - traefik.http.routers.harvester_backend.rule=Host(`${URL}`)
@@ -65,6 +74,13 @@ services:
       - traefik.http.routers.harvester_backend.tls.certresolver=letsencrypt
     networks:
       - harvester_network
+
+  harvester_celery:
+    <<: *harvester_backend
+    image: "harvester_celery"
+    container_name: "harvester_celery"
+    labels: []
+    command: 'sh -c "cd /app && celery -A harvester worker -l=INFO"'
 
 # volumes definiton
 volumes:

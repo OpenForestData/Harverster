@@ -6,6 +6,8 @@ WORKDIR /app
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
 
+RUN apk add --no-cache git
+
 # Copy data
 ADD . /app
 
