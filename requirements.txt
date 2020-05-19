@@ -1,5 +1,6 @@
 Django==2.2.12
 Celery==4.4.2
+redis==3.5.2
 
 django-cors-headers==3.2.1
 djangorestframework==3.11.0
