@@ -44,7 +44,14 @@ services:
     networks:
       - harvester_network
 
-  harvester_backend:
+  harvester_redis:
+    container_name: "harvester_redis"
+    image: "redis:6-alpine"
+    restart: unless-stopped
+    networks: 
+      - harvester_network
+
+  harvester_backend: &harvester_backend
     container_name: "harvester_backend"
     build:
       context: .
@@ -60,6 +67,9 @@ services:
       - DB_DATABASE=harvester
       - DB_USER=harvester
       - DB_PASSWORD=harvester_password
+      - READ_DOT_ENV=True
+    env_file:
+      - example.env
     labels:
       - traefik.enable=true
       - traefik.http.routers.harvester_backend.rule=Host(`${URL}`)
@@ -74,10 +84,18 @@ services:
     networks:
       - harvester_network
 
+  harvester_celery:
+    <<: *harvester_backend
+    image: "harvester_celery"
+    container_name: "harvester_celery"
+    labels: []
+    command: 'sh -c "cd /app && celery -A harvester worker -l=INFO"'
+
 # volumes definiton
 volumes:
   init_db:
   mongo_data:
+  redis_data:
 
 # network definition
 networks:
