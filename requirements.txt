@@ -1,6 +1,11 @@
 Django==2.2.12
+Celery==4.4.2
+
 django-cors-headers==3.2.1
 djangorestframework==3.11.0
 djongo==1.3.2
 python-dotenv==0.13.0
 sqlparse==0.2.4
+django-environ==0.4.5
+django-celery-beat==2.0.0
+pyDatavers@ git+https://gitlab.whiteaster.com/openforestdata/backend/pydataverse-upgrade.git
