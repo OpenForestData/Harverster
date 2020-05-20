@@ -32,15 +32,14 @@ services:
 
   harvester_db:
     container_name: "harvester_db"
-    image: "mongo:4.2"
+    image: "postgres:12-alpine"
     restart: unless-stopped
     volumes:
-      - init_db:/docker-entrypoint-initdb.d
-      - mongo_data:/data/db
+      - harvester_db:/var/lib/postgresql
     environment:
-      - MONGO_INITDB_DATABASE=harvester
-      - MONGO_INITDB_ROOT_USERNAME=harvester
-      - MONGO_INITDB_ROOT_PASSWORD=harvester_password
+      - POSTGRES_USER=harvesteruser
+      - POSTGRES_PASSWORD=ctwB28e
+      - POSTGRES_DB=harvester
     networks:
       - harvester_network
 
@@ -85,7 +84,7 @@ services:
 # volumes definiton
 volumes:
   init_db:
-  mongo_data:
+  harvester_db:
   redis_data:
 
 # network definition
