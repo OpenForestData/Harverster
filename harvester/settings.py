@@ -9,7 +9,7 @@ https://docs.djangoproject.com/en/2.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/2.2/ref/settings/
 """
-
+import json
 import os
 from ast import literal_eval
 
@@ -24,7 +24,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # See https://docs.djangoproject.com/en/2.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get('SECRET_KEY', 'abcTEST')
+SECRET_KEY = os.environ.get('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = literal_eval(os.environ.get('DEBUG', 'True'))
@@ -89,19 +89,31 @@ WSGI_APPLICATION = 'harvester.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/2.2/ref/settings/#databases
 
+# Database Configuration
 DATABASES = {
     'default': {
-        "ENGINE": 'djongo',
-        "NAME": os.environ.get("DB_DATABASE", 'harvester'),
-        'ENFORCE_SCHEMA': True,
-        'CLIENT': {
-            'host': os.environ.get("DB_HOST", "localhost"),
-            'port': os.environ.get("DB_PORT", 27017),
-            'username': os.environ.get("DB_USER", "harvester"),
-            'password': os.environ.get("DB_PASSWORD", "harvester_password"),
-        },
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': os.environ.get("DB_NAME"),
+        'USER': os.environ.get("DB_USER"),
+        'PASSWORD': os.environ.get("DB_PASSWORD"),
+        'HOST': os.environ.get("DB_HOST"),
+        'PORT': '5432',
     }
 }
+
+# MONGO_DB = {
+#     'mongodb': {
+#         "ENGINE": 'djongo',
+#         "NAME": os.environ.get("DB_DATABASE", 'harvester'),
+#         'ENFORCE_SCHEMA': True,
+#         'CLIENT': {
+#             'host': os.environ.get("DB_HOST", "localhost"),
+#             'port': os.environ.get("DB_PORT", 27017),
+#             'username': os.environ.get("DB_USER", "harvester"),
+#             'password': os.environ.get("DB_PASSWORD", "harvester_password"),
+#         },
+#     }
+# }
 
 
 # Password validation
@@ -144,4 +156,8 @@ STATIC_URL = '/static/'
 
 # Celery
 CELERY_TASK_EAGER_PROPAGATES = True
-CELERY_BROKER_URL = os.environ.get("CELERY_BROKER_URL")
+CELERY_BROKER_URL = os.environ.get('CELERY_BROKER_URL')
+
+# App specific settings
+HARVESTED_SYSTEM = os.environ.get('HARVESTED_SYSTEM')
+HARVESTED_PERIOD = json.loads(os.environ['HARVESTED_PERIOD'])
