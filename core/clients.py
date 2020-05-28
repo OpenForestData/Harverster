@@ -1,18 +1,16 @@
 from abc import ABC, abstractmethod
-from pyDataverse.models import Dataset
-from pyDataverse.api import Api
+from typing import List
 
-class BaseClient(ABC):
+from .models import Resource
 
-    dataverse_api = Api
 
-    def harvest(self):
+class HarvestingClient(ABC):
+
+    def __init__(self, api_key=None):
+        self.api_key = api_key
+
+    @abstractmethod
+    def harvest(self) -> List[Resource]:
         """
         Function loads data from designated system and uploads it to Dataverse
         """
-        resources = self.get_resources()
-
-
-    @abstractmethod
-    def get_resources(self):
-        pass

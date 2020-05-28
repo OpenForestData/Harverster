@@ -98,23 +98,24 @@ DATABASES = {
         'PASSWORD': os.environ.get("DB_PASSWORD"),
         'HOST': os.environ.get("DB_HOST"),
         'PORT': '5432',
+    },
+    'mongodb': {
+        "ENGINE": 'djongo',
+        "NAME": os.environ.get("MONGO_DATABASE"),
+        'ENFORCE_SCHEMA': True,
+        'CLIENT': {
+            'host': os.environ.get("MONGO_HOST"),
+            'port': os.environ.get("MONGO_PORT"),
+            'username': os.environ.get("MONGO_USER"),
+            'password': os.environ.get("MONGO_PASSWORD"),
+        },
     }
 }
 
-# MONGO_DB = {
-#     'mongodb': {
-#         "ENGINE": 'djongo',
-#         "NAME": os.environ.get("DB_DATABASE", 'harvester'),
-#         'ENFORCE_SCHEMA': True,
-#         'CLIENT': {
-#             'host': os.environ.get("DB_HOST", "localhost"),
-#             'port': os.environ.get("DB_PORT", 27017),
-#             'username': os.environ.get("DB_USER", "harvester"),
-#             'password': os.environ.get("DB_PASSWORD", "harvester_password"),
-#         },
-#     }
-# }
+# DATABASE_ROUTERS = ('core.database_router.DBRouter')
 
+NOSQL_MODELS = ['GeonodeResource']
+NOSQL_DATABASE = 'mongodb'
 
 # Password validation
 # https://docs.djangoproject.com/en/2.2/ref/settings/#auth-password-validators
@@ -161,3 +162,4 @@ CELERY_BROKER_URL = os.environ.get('CELERY_BROKER_URL')
 # App specific settings
 HARVESTED_SYSTEM = os.environ.get('HARVESTED_SYSTEM')
 HARVESTED_PERIOD = json.loads(os.environ['HARVESTED_PERIOD'])
+
