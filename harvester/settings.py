@@ -95,7 +95,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
         'NAME': os.environ.get("DB_NAME"),
         'USER': os.environ.get("DB_USER"),
-        'PASSWORD': os.environ.get("DB_PASSWORD"),
+        'PASSWORD': os.environ.get("DB_PASSWORD", 5432),
         'HOST': os.environ.get("DB_HOST"),
         'PORT': '5432',
     },
@@ -105,7 +105,7 @@ DATABASES = {
         'ENFORCE_SCHEMA': True,
         'CLIENT': {
             'host': os.environ.get("MONGO_HOST"),
-            'port': os.environ.get("MONGO_PORT"),
+            'port': os.environ.get("MONGO_PORT", 27017),
             'username': os.environ.get("MONGO_USER"),
             'password': os.environ.get("MONGO_PASSWORD"),
         },
