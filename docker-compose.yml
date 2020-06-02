@@ -73,7 +73,7 @@ services:
     environment:
       - READ_DOR_ENV=true
     env_file:
-      - example.env
+      - .env
     labels:
       - traefik.enable=true
       - traefik.http.routers.harvester_backend.rule=Host(`${URL}`)

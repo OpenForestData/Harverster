@@ -2,4 +2,4 @@ from django.apps import AppConfig
 
 
 class GeonodeConfig(AppConfig):
-    name = 'geonode'
+    name = 'adapters.geonode'

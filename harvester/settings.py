@@ -51,7 +51,9 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'corsheaders',
-    'django_celery_beat'
+    'django_celery_beat',
+
+    'adapters.geonode.apps.GeonodeConfig'
 ]
 
 MIDDLEWARE = [
@@ -163,3 +165,4 @@ CELERY_BROKER_URL = os.environ.get('CELERY_BROKER_URL')
 HARVESTED_SYSTEM = os.environ.get('HARVESTED_SYSTEM')
 HARVESTED_PERIOD = json.loads(os.environ['HARVESTED_PERIOD'])
 
+GEONODE_OFFSET = os.environ.get('GEONODE_OFFSET', 1000)

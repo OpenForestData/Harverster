@@ -6,7 +6,10 @@ from .models import Resource
 
 class HarvestingClient(ABC):
 
-    def __init__(self, api_key=None):
+    def __init__(self, service_url, api_key=None):
+        if service_url[-1] != '/':
+            service_url += '/'
+        self.service_url = service_url
         self.api_key = api_key
 
     @abstractmethod
