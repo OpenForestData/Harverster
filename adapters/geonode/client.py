@@ -28,21 +28,18 @@ class GeonodeClient(HarvestingClient):
         :return: list of harvested data from Geonode
         """
 
-        # TODO: Check if timezone is needed
-        # HarvestingDatestamp(status='OK').save()
-
         return (
                 self.get_resources('layers/', self.__map_layer_to_resource) +
                 self.get_resources('maps/', self.__map_map_to_resource) +
                 self.get_resources('documents/', self.__map_document_to_resource)
         )
 
-    def get_resources(self, resource_path, resource_map_function, initial_sync=False) -> List[Resource]:
+    def get_resources(self, resource_path, resource_map_function, full_sync=False) -> List[Resource]:
         """
         Fetch data from Geonode API endpoint, maps it to Resource and returns it as a list of Resources
         :param resource_path: url relative path to API endpoint
         :param resource_map_function: function mapping data type retrieved from endpoint to Resource object
-        :param initial_sync: True if resources all resources should be harvested
+        :param full_sync: True if resources all resources should be harvested
         :return: list of fetched data as Resources list
         """
         params = {
@@ -50,7 +47,7 @@ class GeonodeClient(HarvestingClient):
             'order_by': 'date'
         }
 
-        if not initial_sync:
+        if not full_sync:
             params['date__gte'] = self.__get_last_sync_date()
 
         try:
@@ -64,6 +61,9 @@ class GeonodeClient(HarvestingClient):
         while results['meta']['next'] is not None:
             results = self.__get_next_page(resource_path, results['meta']['limit'], results['meta']['offset'])
             resources += results['objects']
+
+        # TODO: Check if timezone is needed
+        # HarvestingDatestamp(status='OK').save()
 
         return [resource_map_function(resource) for resource in resources]
 
