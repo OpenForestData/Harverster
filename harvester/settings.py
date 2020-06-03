@@ -54,6 +54,7 @@ INSTALLED_APPS = [
     'django_celery_beat',
 
     'adapters.geonode.apps.GeonodeConfig'
+    'adapters.grafana.apps.GrafanaConfig'
 ]
 
 MIDDLEWARE = [
