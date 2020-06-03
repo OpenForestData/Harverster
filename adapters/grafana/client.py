@@ -30,7 +30,7 @@ class GrafanaClient(HarvestingClient):
 
     def get_resources(self, resource_path, resource_map_function) -> List[Resource]:
         """
-        Fetch data from Geonode API endpoint, maps it to Resource and returns it as a list of Resources
+        Fetch data from Grafana API endpoint, maps it to Resource and returns it as a list of Resources
         :param resource_path: url relative path to API endpoint
         :param resource_map_function: function mapping data type retrieved from endpoint to Resource object
         :return: list of fetched data as Resources list
@@ -59,9 +59,9 @@ class GrafanaClient(HarvestingClient):
 
     def __get_detailed_data(self, resources) -> list:
         """
-
-        :param resources:
-        :return:
+        Fetch detailed data from Grafana API dashboard route
+        :param resources: list of harvested data from Grafana search route
+        :return: list of harvested data from Grafana with detailed data
         """
         headers = {
             'Authorization': f'Bearer {self.api_key}'
