@@ -4,6 +4,7 @@ import os
 from typing import List
 
 import requests
+from pyDataverse.models import Datafile
 
 from adapters.geonode.models import HarvestingDatestamp
 from core.clients import HarvestingClient
@@ -120,14 +121,41 @@ class GrafanaClient(HarvestingClient):
         :param dashboard: dict to map to Resource
         :return: Resource representing layer
         """
-        res = Resource(os.environ.get('DASHBOARD_PARENT_DATAVERSE'))
+        datafile = Datafile()
 
+        # Create file data
+        file_data = {}
+        uid = dashboard['search']['uid']
+
+        file_data["server_meta"] = {"url": self.service_url}
+        file_data["dashboard"] = {
+            "panels": dashboard['dashboard']['panels'],
+            "uid": uid
+        }
+
+        # Create file
+        file_name = f'{uid}.json'
+        # TODO: Fix file open localization
+        file_object = open(file_name, 'w')
+        json.dump(file_data, file_object)
+
+        # Create datafile.data
+        data = {
+            'description': 'External tool file',
+            'filename': file_name
+        }
+
+        # Close file
+        file_object.close()
+
+        # Set datafile data
+        datafile.set(data=data)
+
+        res = Resource(os.environ.get('DASHBOARD_PARENT_DATAVERSE'), datafile=datafile)
         mapping = self.__base_mapping(dashboard)
 
         for key, val in mapping.items():
             setattr(res.dataset, key, val)
-
-        # TODO: Add datafile
 
         return res
 
@@ -145,5 +173,4 @@ class GrafanaClient(HarvestingClient):
             'dsDescription': [{'dsDescriptionValue': ''}],
             'depositor': obj['meta']['createdBy'],
             'dateOfDeposit': obj['meta']['created'],
-            'uid': obj['search']['uid'],
         }
