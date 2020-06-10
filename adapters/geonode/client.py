@@ -22,6 +22,10 @@ def http_exception_handler(e: HttpException):
 class GeonodeClient(HarvestingClient):
     offset = settings.GEONODE_OFFSET
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.service_url += 'api/'
+
     def harvest(self) -> List[Resource]:
         """
         Harvests every resource from Geonode and returns is as a list of Resources
@@ -87,11 +91,11 @@ class GeonodeClient(HarvestingClient):
         :return: response json as dict
         """
         response = requests.get(self.service_url + path, params=params, headers=headers)
-        if response.status_code == requests.codes.ok:
-            return json.loads(response.text)
+        if response.status_code != requests.codes.ok:
+            msg = f'GET {self.service_url + path} with params {params} returned: {response.status_code} {response.text}'
+            raise HttpException(msg)
 
-        msg = f'GET {self.service_url + path} with params {params} returned: {response.status_code} {response.text}'
-        raise HttpException(msg)
+        return json.loads(response.text)
 
     def __map_layer_to_resource(self, layer) -> Resource:
         """
@@ -153,12 +157,14 @@ class GeonodeClient(HarvestingClient):
             'author': [{'authorName': obj['owner_name'],
                         'authorAffiliation': 'Geonode'}],
             'dsDescription': [{'dsDescriptionValue': obj['abstract']}],
-            'subject': 'Earth and Environmental Sciences',
+            'datasetContact': [{'datasetContactEmail': obj['owner_name'] + '@test.com',
+                                'datasetContactName': obj['owner_name']}],
+            'subject': ['Earth and Environmental Sciences'],
         }
 
     @staticmethod
     def __bounding_box_mapping(obj):
         return {
-            'geographicBoundingBox': [{'westLongitude': obj['bbox_x0']}, {'eastLongitude': obj['bbox_x1']},
-                                      {'northLongitude': obj['bbox_y0']}, {'southLongitude': obj['bbox_y1']}]
+            'geographicBoundingBox': [{'westLongitude': obj['bbox_x0'], 'eastLongitude': obj['bbox_x1'],
+                                       'northLongitude': obj['bbox_y0'], 'southLongitude': obj['bbox_y1']}]
         }

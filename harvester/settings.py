@@ -87,7 +87,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'harvester.wsgi.application'
 
-
 # Database
 # https://docs.djangoproject.com/en/2.2/ref/settings/#databases
 
@@ -114,9 +113,9 @@ DATABASES = {
     }
 }
 
-# DATABASE_ROUTERS = ('core.database_router.DBRouter')
+DATABASE_ROUTERS = ('core.database_router.DBRouter',)
 
-NOSQL_MODELS = ['GeonodeResource']
+NOSQL_MODELS = ['HarvestingDatestamp', 'GeonodeResourceIdMapping']
 NOSQL_DATABASE = 'mongodb'
 
 # Password validation
@@ -137,7 +136,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
 # Internationalization
 # https://docs.djangoproject.com/en/2.2/topics/i18n/
 
@@ -150,7 +148,6 @@ USE_I18N = True
 USE_L10N = True
 
 USE_TZ = True
-
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.2/howto/static-files/
@@ -165,4 +162,18 @@ CELERY_BROKER_URL = os.environ.get('CELERY_BROKER_URL')
 HARVESTED_SYSTEM = os.environ.get('HARVESTED_SYSTEM')
 HARVESTED_PERIOD = json.loads(os.environ['HARVESTED_PERIOD'])
 
+# Dataverse
+DATAVERSE_URL = os.environ.get('DATAVERSE_URL')
+DATAVERSE_API_KEY = os.environ.get('DATAVERSE_API_KEY')
+
+
+# Geonode
 GEONODE_OFFSET = os.environ.get('GEONODE_OFFSET', 1000)
+
+CLIENTS_DICT = {
+    'geonode': {
+        'module': 'adapters.geonode.client',
+        'class': 'GeonodeClient',
+        'url': 'http://gis.openforestdata.pl/'
+    }
+}

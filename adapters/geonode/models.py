@@ -7,11 +7,7 @@ class HarvestingDatestamp(models.Model):
     status = models.fields.CharField(max_length=10)
 
 
-class ResourceIdMapping(models.Model):
+class GeonodeResourceIdMapping(models.Model):
     geonode_id = models.fields.IntegerField()
     dataverse_id = models.fields.IntegerField()
     dataverse_pid = models.fields.CharField(max_length=12)
-
-
-class GeonodeResource(models.Model):
-    pass
