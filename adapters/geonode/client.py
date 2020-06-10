@@ -5,6 +5,7 @@ from typing import List
 
 import requests
 from django.conf import settings
+from pyDataverse.models import Datafile
 
 from adapters.geonode.models import HarvestingDatestamp
 from core.clients import HarvestingClient
@@ -31,12 +32,13 @@ class GeonodeClient(HarvestingClient):
         Harvests every resource from Geonode and returns is as a list of Resources
         :return: list of harvested data from Geonode
         """
+        return self.get_resources('maps/', self.__map_map_to_resource)
 
-        return (
-                self.get_resources('layers/', self.__map_layer_to_resource) +
-                self.get_resources('maps/', self.__map_map_to_resource) +
-                self.get_resources('documents/', self.__map_document_to_resource)
-        )
+        # return (
+        #         self.get_resources('layers/', self.__map_layer_to_resource) +
+        #         self.get_resources('maps/', self.__map_map_to_resource) +
+        #         self.get_resources('documents/', self.__map_document_to_resource)
+        # )
 
     def get_resources(self, resource_path, resource_map_function, full_sync=False) -> List[Resource]:
         """
@@ -121,6 +123,36 @@ class GeonodeClient(HarvestingClient):
         :param geomap: dict to map to Resource
         :return: Resource representing geonode map
         """
+        # Move to separated function
+        datafile = Datafile()
+
+        # Create file data
+        uuid = geomap['uuid']
+
+        file_data = {
+            'uuid': uuid,
+            'site_url': geomap['site_url'],
+            'detail_url': geomap['detail_url']
+        }
+
+        # Create file
+        file_name = f'{uuid}-geonode.json'
+        # TODO: Fix file open localization
+        file_object = open(file_name, 'w')
+        json.dump(file_data, file_object)
+
+        # Create datafile.data
+        data = {
+            'description': 'External tool file',
+            'filename': file_name
+        }
+
+        # Close file
+        file_object.close()
+
+        # Set datafile data
+        datafile.set(data=data)
+
         res = Resource(os.environ.get('MAPS_PARENT_DATAVERSE'))
 
         mapping = self.__base_mapping(geomap)
@@ -128,8 +160,6 @@ class GeonodeClient(HarvestingClient):
 
         for key, val in mapping.items():
             setattr(res.dataset, key, val)
-
-        # TODO: Add datafile
 
         return res
 
