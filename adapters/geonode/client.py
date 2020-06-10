@@ -136,7 +136,7 @@ class GeonodeClient(HarvestingClient):
         }
 
         # Create file
-        file_name = f'{uuid}-geonode.json'
+        file_name = f'{uuid}.map_geonode'
         # TODO: Fix file open localization
         file_object = open(file_name, 'w')
         json.dump(file_data, file_object)
