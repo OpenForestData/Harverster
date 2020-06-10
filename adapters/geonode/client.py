@@ -32,13 +32,11 @@ class GeonodeClient(HarvestingClient):
         Harvests every resource from Geonode and returns is as a list of Resources
         :return: list of harvested data from Geonode
         """
-        return self.get_resources('maps/', self.__map_map_to_resource)
-
-        # return (
-        #         self.get_resources('layers/', self.__map_layer_to_resource) +
-        #         self.get_resources('maps/', self.__map_map_to_resource) +
-        #         self.get_resources('documents/', self.__map_document_to_resource)
-        # )
+        return (
+                self.get_resources('layers/', self.__map_layer_to_resource) +
+                self.get_resources('maps/', self.__map_map_to_resource) +
+                self.get_resources('documents/', self.__map_document_to_resource)
+        )
 
     def get_resources(self, resource_path, resource_map_function, full_sync=False) -> List[Resource]:
         """
