@@ -123,7 +123,7 @@ class GeonodeClient(HarvestingClient):
         :param geomap: dict to map to Resource
         :return: Resource representing geonode map
         """
-        # Move to separated function
+        # Todo: Move to separated function in core
         datafile = Datafile()
 
         # Create file data

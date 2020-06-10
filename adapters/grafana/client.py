@@ -121,6 +121,7 @@ class GrafanaClient(HarvestingClient):
         :param dashboard: dict to map to Resource
         :return: Resource representing layer
         """
+        # Todo: Move to separated function in core
         datafile = Datafile()
 
         # Create file data
