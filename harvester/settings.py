@@ -53,7 +53,8 @@ INSTALLED_APPS = [
     'corsheaders',
     'django_celery_beat',
 
-    'adapters.geonode.apps.GeonodeConfig'
+    'adapters.geonode.apps.GeonodeConfig',
+    'adapters.grafana.apps.GrafanaConfig'
 ]
 
 MIDDLEWARE = [
