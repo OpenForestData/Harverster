@@ -124,17 +124,16 @@ class GrafanaClient(HarvestingClient):
         datafile = Datafile()
 
         # Create file data
-        file_data = {}
         uid = dashboard['search']['uid']
 
-        file_data["server_meta"] = {"url": self.service_url}
-        file_data["dashboard"] = {
-            "panels": dashboard['dashboard']['panels'],
-            "uid": uid
+        file_data = {
+            'uid': uid,
+            'site_url': self.service_url,
+            'details_url': f'/api/dashboards/uid/{uid}'
         }
 
         # Create file
-        file_name = f'{uid}.json'
+        file_name = f'{uid}.dashboard_grafana'
         # TODO: Fix file open localization
         file_object = open(file_name, 'w')
         json.dump(file_data, file_object)
