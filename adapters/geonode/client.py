@@ -151,7 +151,7 @@ class GeonodeClient(HarvestingClient):
         # Set datafile data
         datafile.set(data=data)
 
-        res = Resource(os.environ.get('MAPS_PARENT_DATAVERSE'))
+        res = Resource(os.environ.get('MAPS_PARENT_DATAVERSE'), datafile=datafile)
 
         mapping = self.__base_mapping(geomap)
         mapping.update(self.__bounding_box_mapping(geomap))

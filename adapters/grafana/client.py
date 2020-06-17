@@ -161,6 +161,7 @@ class GrafanaClient(HarvestingClient):
 
     @staticmethod
     def __base_mapping(obj):
+        # TODO: Fix keyword mapping
         return {
             'title': obj['search']['title'],
             'publicationDate': obj['meta']['created'],
@@ -169,7 +170,7 @@ class GrafanaClient(HarvestingClient):
             'datasetContact': [{'datasetContactEmail': obj['meta']['createdBy'] + '@test.com',
                                 'datasetContactName': obj['meta']['createdBy']}],
             'subject': ['Earth and Environmental Sciences'],
-            'keyword': obj['search']['tags'],
+            # 'keyword': obj['search']['tags'],
             'dsDescription': [{'dsDescriptionValue': ''}],
             'depositor': obj['meta']['createdBy'],
             'dateOfDeposit': obj['meta']['created'],

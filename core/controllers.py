@@ -32,6 +32,7 @@ class HarvestingController:
                 raise HttpException(resp.text)
 
             resp_dict = json.loads(resp.text)
+
             if resource.datafile:
-                self.dataverse_client.upload_file(resp_dict)
+                self.dataverse_client.upload_file(resp_dict['data']['persistentId'], resource.datafile.filename)
         logger.debug(f'Upload to {self.dataverse_client.base_url} completed.')
