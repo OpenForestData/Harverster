@@ -5,12 +5,13 @@ from typing import List
 
 import requests
 from django.conf import settings
+from django.utils import timezone
 from pyDataverse.models import Datafile
 
 from adapters.geonode.models import HarvestingDatestamp
 from core.clients import HarvestingClient
 from core.exceptions import HttpException
-from core.models import Resource
+from core.models import Resource, ResourceMapping
 
 logger = logging.getLogger(__name__)
 
@@ -69,7 +70,21 @@ class GeonodeClient(HarvestingClient):
         # TODO: Check if timezone is needed
         # HarvestingDatestamp(status='OK').save()
 
-        return [resource_map_function(resource) for resource in resources]
+        add_resources = self.__get_only_new(resources, ResourceMapping.GEONODE, resource_map_function)
+
+        return add_resources
+
+    def __get_only_new(self, resources, category, resource_map_function) -> list:
+        add_resources = []
+        for resource in resources:
+            uid = resource['uuid']
+            resource_mapping = ResourceMapping.objects.filter(uid=uid).first()
+            if resource_mapping is None or resource_mapping.pid is None:
+                if resource_mapping is None:
+                    ResourceMapping(uid=uid, pid=None, last_update=timezone.now(), category=category).save()
+                add_resources.append(resource)
+
+        return [resource_map_function(resource) for resource in add_resources]
 
     def __get_next_page(self, path, limit, offset):
         params = {
@@ -90,7 +105,8 @@ class GeonodeClient(HarvestingClient):
         :param headers: request headers
         :return: response json as dict
         """
-        response = requests.get(self.service_url + path, params=params, headers=headers)
+        # TODO: Remove verify argument
+        response = requests.get(self.service_url + path, params=params, headers=headers, verify=False)
         if response.status_code != requests.codes.ok:
             msg = f'GET {self.service_url + path} with params {params} returned: {response.status_code} {response.text}'
             raise HttpException(msg)
@@ -103,7 +119,9 @@ class GeonodeClient(HarvestingClient):
         :param layer: dict to map to Resource
         :return: Resource representing layer
         """
-        res = Resource(os.environ.get('LAYERS_PARENT_DATAVERSE'))
+        uuid = layer['uuid']
+
+        res = Resource(os.environ.get('LAYERS_PARENT_DATAVERSE'), uid=uuid)
 
         mapping = self.__base_mapping(layer)
         mapping.update(self.__bounding_box_mapping(layer))
@@ -151,7 +169,7 @@ class GeonodeClient(HarvestingClient):
         # Set datafile data
         datafile.set(data=data)
 
-        res = Resource(os.environ.get('MAPS_PARENT_DATAVERSE'), datafile=datafile)
+        res = Resource(os.environ.get('MAPS_PARENT_DATAVERSE'), datafile=datafile, uid=uuid)
 
         mapping = self.__base_mapping(geomap)
         mapping.update(self.__bounding_box_mapping(geomap))
@@ -167,7 +185,9 @@ class GeonodeClient(HarvestingClient):
         :param document: dict to map to Resource
         :return: Resource representing document
         """
-        res = Resource(os.environ.get('DOCUMENTS_PARENT_DATAVERSE'))
+        uuid = document['uuid']
+
+        res = Resource(os.environ.get('DOCUMENTS_PARENT_DATAVERSE'), uid=uuid)
 
         mapping = self.__base_mapping(document)
 
