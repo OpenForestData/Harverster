@@ -4,12 +4,13 @@ import os
 from typing import List
 
 import requests
+from django.utils import timezone
 from pyDataverse.models import Datafile
 
 from adapters.geonode.models import HarvestingDatestamp
 from core.clients import HarvestingClient
 from core.exceptions import HttpException
-from core.models import Resource
+from core.models import Resource, ResourceMapping
 
 logger = logging.getLogger(__name__)
 
@@ -29,7 +30,7 @@ class GrafanaClient(HarvestingClient):
 
         return self.get_resources('api/search/', self.__map_dashboard_to_resource)
 
-    def get_resources(self, resource_path, resource_map_function) -> List[Resource]:
+    def get_resources(self, resource_path, resource_map_function) -> list:
         """
         Fetch data from Grafana API endpoint, maps it to Resource and returns it as a list of Resources
         :param resource_path: url relative path to API endpoint
@@ -55,8 +56,21 @@ class GrafanaClient(HarvestingClient):
 
         # Get detailed resource data
         resources = self.__get_detailed_data(resources)
+        add_resources = self.__get_only_new(resources, ResourceMapping.GRAFANA, resource_map_function)
 
-        return [resource_map_function(resource) for resource in resources]
+        return add_resources
+
+    def __get_only_new(self, resources, category, resource_map_function) -> list:
+        add_resources = []
+        for resource in resources:
+            uid = resource['search']['uid']
+            resource_mapping = ResourceMapping.objects.filter(uid=uid).first()
+            if resource_mapping is None or resource_mapping.pid is None:
+                if resource_mapping is None:
+                    ResourceMapping(uid=uid, pid=None, last_update=timezone.now(), category=category).save()
+                add_resources.append(resource)
+
+        return [resource_map_function(resource) for resource in add_resources]
 
     def __get_detailed_data(self, resources) -> list:
         """
@@ -115,43 +129,47 @@ class GrafanaClient(HarvestingClient):
         msg = f'GET {self.service_url + path} with params {params} returned: {response.status_code} {response.text}'
         raise HttpException(msg)
 
-    def __map_dashboard_to_resource(self, dashboard) -> Resource:
+    def __map_dashboard_to_resource(self, dashboard, create_file: bool = True) -> Resource:
         """
         Maps dashboard to Resource object
         :param dashboard: dict to map to Resource
         :return: Resource representing layer
         """
-        # Todo: Move to separated function in core
-        datafile = Datafile()
-
-        # Create file data
         uid = dashboard['search']['uid']
 
-        file_data = {
-            'uid': uid,
-            'site_url': self.service_url,
-            'details_url': f'/api/dashboards/uid/{uid}'
-        }
+        # Todo: Move to separated function in core
+        if create_file:
+            datafile = Datafile()
 
-        # Create file
-        file_name = f'{uid}.dashboard_grafana'
-        # TODO: Fix file open localization
-        file_object = open(file_name, 'w')
-        json.dump(file_data, file_object)
+            # Create file data
+            file_data = {
+                'uid': uid,
+                'site_url': self.service_url,
+                'details_url': f'/api/dashboards/uid/{uid}'
+            }
 
-        # Create datafile.data
-        data = {
-            'description': 'External tool file',
-            'filename': file_name
-        }
+            # Create file
+            file_name = f'{uid}.dashboard_grafana'
+            # TODO: Fix file open localization
+            file_object = open(file_name, 'w')
+            json.dump(file_data, file_object)
 
-        # Close file
-        file_object.close()
+            # Create datafile.data
+            data = {
+                'description': 'External tool file',
+                'filename': file_name
+            }
 
-        # Set datafile data
-        datafile.set(data=data)
+            # Close file
+            file_object.close()
 
-        res = Resource(os.environ.get('DASHBOARD_PARENT_DATAVERSE'), datafile=datafile)
+            # Set datafile data
+            datafile.set(data=data)
+
+            res = Resource(os.environ.get('DASHBOARDS_PARENT_DATAVERSE'), datafile=datafile, uid=uid)
+        else:
+            res = Resource(os.environ.get('DASHBOARDS_PARENT_DATAVERSE'), uid=uid)
+
         mapping = self.__base_mapping(dashboard)
 
         for key, val in mapping.items():
