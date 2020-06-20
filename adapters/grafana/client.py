@@ -30,7 +30,7 @@ class GrafanaClient(HarvestingClient):
 
         return self.get_resources('api/search/', self.__map_dashboard_to_resource)
 
-    def get_resources(self, resource_path, resource_map_function) -> list:
+    def get_resources(self, resource_path, resource_map_function) -> (list, list, list):
         """
         Fetch data from Grafana API endpoint, maps it to Resource and returns it as a list of Resources
         :param resource_path: url relative path to API endpoint
@@ -57,8 +57,9 @@ class GrafanaClient(HarvestingClient):
         # Get detailed resource data
         resources = self.__get_detailed_data(resources)
         add_resources = self.__get_only_new(resources, ResourceMapping.GRAFANA, resource_map_function)
+        delete_resources = self.__get_only_to_remove(resources)
 
-        return add_resources
+        return add_resources, [], delete_resources
 
     def __get_only_new(self, resources, category, resource_map_function) -> list:
         add_resources = []
@@ -71,6 +72,16 @@ class GrafanaClient(HarvestingClient):
                 add_resources.append(resource)
 
         return [resource_map_function(resource) for resource in add_resources]
+
+    def __get_only_to_remove(self, resources):
+        resources_uid = [resource['search']['uid'] for resource in resources]
+        delete_resources = ResourceMapping.objects.filter(
+            category=ResourceMapping.GRAFANA
+        ).exclude(
+            uid__in=resources_uid
+        )
+
+        return list(delete_resources)
 
     def __get_detailed_data(self, resources) -> list:
         """

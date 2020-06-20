@@ -28,18 +28,24 @@ class GeonodeClient(HarvestingClient):
         super().__init__(*args, **kwargs)
         self.service_url += 'api/'
 
-    def harvest(self) -> List[Resource]:
+    def harvest(self):
         """
         Harvests every resource from Geonode and returns is as a list of Resources
         :return: list of harvested data from Geonode
         """
-        return (
-                self.get_resources('layers/', self.__map_layer_to_resource) +
-                self.get_resources('maps/', self.__map_map_to_resource) +
-                self.get_resources('documents/', self.__map_document_to_resource)
-        )
+        layers = self.get_resources('layers/', self.__map_layer_to_resource)
+        maps = self.get_resources('maps/', self.__map_map_to_resource)
+        documents = self.get_resources('documents/', self.__map_document_to_resource)
 
-    def get_resources(self, resource_path, resource_map_function, full_sync=False) -> List[Resource]:
+        add_data = [layers[0] + maps[0], documents[0]]
+        update_data = [layers[1] + maps[1], documents[1]]
+        remove_data = [layers[2] + maps[2], documents[2]]
+
+        return add_data, update_data, remove_data
+
+    def get_resources(self, resource_path, resource_map_function, full_sync=False) -> (List[Resource],
+                                                                                       List[Resource],
+                                                                                       List[Resource]):
         """
         Fetch data from Geonode API endpoint, maps it to Resource and returns it as a list of Resources
         :param resource_path: url relative path to API endpoint
@@ -72,7 +78,7 @@ class GeonodeClient(HarvestingClient):
 
         add_resources = self.__get_only_new(resources, ResourceMapping.GEONODE, resource_map_function)
 
-        return add_resources
+        return add_resources, [], []
 
     def __get_only_new(self, resources, category, resource_map_function) -> list:
         add_resources = []
