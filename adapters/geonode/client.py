@@ -37,9 +37,9 @@ class GeonodeClient(HarvestingClient):
         maps = self.get_resources('maps/', self.__map_map_to_resource)
         documents = self.get_resources('documents/', self.__map_document_to_resource)
 
-        add_data = [layers[0] + maps[0], documents[0]]
-        update_data = [layers[1] + maps[1], documents[1]]
-        remove_data = [layers[2] + maps[2], documents[2]]
+        add_data = [layers[0] + maps[0] + documents[0]]
+        update_data = [layers[1] + maps[1] + documents[1]]
+        remove_data = [layers[2] + maps[2] + documents[2]]
 
         return add_data, update_data, remove_data
 
@@ -77,8 +77,9 @@ class GeonodeClient(HarvestingClient):
         # HarvestingDatestamp(status='OK').save()
 
         add_resources = self.__get_only_new(resources, ResourceMapping.GEONODE, resource_map_function)
+        delete_resources = self.__get_only_to_remove(resources)
 
-        return add_resources, [], []
+        return add_resources, [], delete_resources
 
     def __get_only_new(self, resources, category, resource_map_function) -> list:
         add_resources = []
@@ -91,6 +92,16 @@ class GeonodeClient(HarvestingClient):
                 add_resources.append(resource)
 
         return [resource_map_function(resource) for resource in add_resources]
+
+    def __get_only_to_remove(self, resources):
+        resources_uid = [resource['uuid'] for resource in resources]
+        delete_resources = ResourceMapping.objects.filter(
+            category=ResourceMapping.GEONODE
+        ).exclude(
+            uid__in=resources_uid
+        )
+
+        return list(delete_resources)
 
     def __get_next_page(self, path, limit, offset):
         params = {
