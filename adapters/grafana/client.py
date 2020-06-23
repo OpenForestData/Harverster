@@ -188,14 +188,20 @@ class GrafanaClient(HarvestingClient):
 
         return res
 
-    @staticmethod
-    def __base_mapping(obj):
+    def __create_alternative_url(self, obj: str) -> str:
+        service_url: str = self.service_url if self.service_url[-1] == '/' else self.service_url[:-1]
+        detail_url: str = obj[1:] if obj[0] == '/' else obj
+
+        return service_url + detail_url
+
+    def __base_mapping(self, obj):
         # TODO: Fix keyword mapping
         return {
             'title': obj['search']['title'],
             'publicationDate': obj['meta']['created'],
             'author': [{'authorName': obj['meta']['createdBy'],
                         'authorAffiliation': 'Grafana'}],
+            'alternativeURL': self.__create_alternative_url(obj['search']['uid']),
             'datasetContact': [{'datasetContactEmail': obj['meta']['createdBy'] + '@test.com',
                                 'datasetContactName': obj['meta']['createdBy']}],
             'subject': ['Earth and Environmental Sciences'],

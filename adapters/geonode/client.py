@@ -254,12 +254,18 @@ class GeonodeClient(HarvestingClient):
 
         return res
 
-    @staticmethod
-    def __base_mapping(obj):
+    def __create_alternative_url(self, obj: str) -> str:
+        service_url: str = self.service_url if self.service_url[-1] == '/' else self.service_url[:-1]
+        detail_url: str = obj[1:] if obj[0] == '/' else obj
+
+        return service_url + detail_url
+
+    def __base_mapping(self, obj):
         return {
             'title': obj['title'],
             'author': [{'authorName': obj['owner_name'],
                         'authorAffiliation': 'Geonode'}],
+            'alternativeURL': self.__create_alternative_url(obj['detail_url']),
             'dsDescription': [{'dsDescriptionValue': obj['abstract']}],
             'datasetContact': [{'datasetContactEmail': obj['owner_name'] + '@test.com',
                                 'datasetContactName': obj['owner_name']}],
