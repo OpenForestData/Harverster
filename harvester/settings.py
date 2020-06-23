@@ -53,6 +53,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'django_celery_beat',
 
+    'core.apps.CoreConfig',
     'adapters.geonode.apps.GeonodeConfig',
     'adapters.grafana.apps.GrafanaConfig'
 ]

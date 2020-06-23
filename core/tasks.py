@@ -28,4 +28,3 @@ def run_harvester(name):
     harvester = HarvestingController(app_client, dataverse_client)
     resources = harvester.run_harvest()
     harvester.upload_resources(resources)
-
