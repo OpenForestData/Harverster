@@ -39,7 +39,7 @@ class ResourceMapping(models.Model):
         (STUDY, 'study'),
     )
 
-    uid = models.fields.CharField(unique=True, max_length=40)
+    uid = models.fields.CharField(unique=True, max_length=50)
     pid = models.fields.CharField(max_length=24, blank=True, null=True)
     created_at = models.fields.DateTimeField(auto_now_add=True)
     last_update = models.fields.DateTimeField()
