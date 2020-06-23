@@ -133,4 +133,15 @@ class OrthancClient(HarvestingClient):
 
     @staticmethod
     def __base_mapping(obj):
-        raise NotImplementedError
+        return {
+            'title': obj['PatientMainDicomTags']['PatientName'] + ' ' + obj['MainDicomTags']['StudyID'],
+            'publicationDate': obj['MainDicomTags']['StudyDate'],
+            'author': [{'authorName': obj['MainDicomTags']['RefferingPhysicianName'],
+                        'authorAffiliation': 'Orthanc'}],
+            'datasetContact': [{'datasetContactEmail': obj['MainDicomTags']['RefferingPhysicianName'] + '@test.com',
+                                'datasetContactName': obj['MainDicomTags']['RefferingPhysicianName']}],
+            'subject': ['Earth and Environmental Sciences'],
+            'dsDescription': [{'dsDescriptionValue': obj['MainDicomTags']['StudyDescription']}],
+            'depositor': obj['MainDicomTags']['RefferingPhysicianName'],
+            'dateOfDeposit': obj['MainDicomTags']['StudyDate'],
+        }
