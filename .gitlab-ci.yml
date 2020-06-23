@@ -1,7 +1,14 @@
 image: python:3.8-alpine
 
 stages:
+    - code checks
     - build
+
+Flake8:
+  stage: code checks
+  script:
+    - pip install flake8
+    - flake8 adapters/ core/ harvester/
 
 Build docker dev image:
     image: 
