@@ -56,7 +56,7 @@ class GrafanaClient(HarvestingClient):
 
         # Get detailed resource data
         resources = self.__get_detailed_data(resources)
-        add_resources = self.__get_only_new(resources, ResourceMapping.GRAFANA, resource_map_function)
+        add_resources = self.__get_only_new(resources, ResourceMapping.DASHBOARD, resource_map_function)
         delete_resources = self.__get_only_to_remove(resources)
 
         return add_resources, [], delete_resources
@@ -76,7 +76,7 @@ class GrafanaClient(HarvestingClient):
     def __get_only_to_remove(self, resources):
         resources_uid = [resource['search']['uid'] for resource in resources]
         delete_resources = ResourceMapping.objects.filter(
-            category=ResourceMapping.GRAFANA
+            category=ResourceMapping.DASHBOARD
         ).exclude(
             uid__in=resources_uid
         )
