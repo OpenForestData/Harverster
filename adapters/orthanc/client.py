@@ -174,6 +174,12 @@ class OrthancClient(HarvestingClient):
         else:
             return return_value
 
+    def __create_alternative_url(self, obj: str) -> str:
+        service_url: str = self.service_url if self.service_url[-1] == '/' else self.service_url[:-1]
+        detail_url: str = f'osimis-viewer/app/index.html?study={obj}'
+
+        return service_url + detail_url
+
     def __base_mapping(self, obj) -> dict:
         return {
             'title':
@@ -184,6 +190,7 @@ class OrthancClient(HarvestingClient):
                 'authorName': self.__unknown_value_mapping(obj['MainDicomTags']['ReferringPhysicianName']),
                 'authorAffiliation': 'Orthanc'
             }],
+            'alternativeURL': self.__create_alternative_url(obj['ID']),
             'datasetContact': [{
                 'datasetContactEmail': self.__email_mapping(obj['MainDicomTags']['ReferringPhysicianName']),
                 'datasetContactName': self.__unknown_value_mapping(obj['MainDicomTags']['ReferringPhysicianName'])
