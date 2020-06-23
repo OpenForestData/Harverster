@@ -241,3 +241,7 @@ pip-selfcheck.json
 
 temp.*
 django_warning_logs.log
+
+# Mapping files
+**.dashboard_grafana
+**.map_geonode
