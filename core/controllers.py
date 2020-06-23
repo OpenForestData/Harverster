@@ -3,6 +3,7 @@ import logging
 from typing import List
 
 import requests
+from django.utils import timezone
 from pyDataverse.api import Api
 
 from core.clients import HarvestingClient
@@ -56,4 +57,18 @@ class HarvestingController:
             resource_mapping = ResourceMapping.objects.get(uid=resource.uid)
             resource_mapping.delete()
 
-        logger.debug(f'Upload to {self.dataverse_client.base_url} completed.')
+        logger.debug(f'Removing datasets from {self.dataverse_client.base_url} completed.')
+
+    def update_resources(self, resources: List[Resource]) -> None:
+        logger.debug(f'Starting updating datasets from {self.dataverse_client.base_url}.')
+        for resource in resources:
+            resp = self.dataverse_client.edit_dataset_metadata(resource.pid, resource.dataset.json(), is_replace=False)
+
+            if resp.status_code != requests.codes.ok:
+                raise HttpException(resp.text)
+
+            resource_mapping = ResourceMapping.objects.get(uid=resource.uid)
+            resource_mapping.last_update = timezone.now()
+            resource_mapping.save()
+
+        logger.debug(f'Updating datasets from {self.dataverse_client.base_url} completed.')
