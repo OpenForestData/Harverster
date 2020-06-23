@@ -46,8 +46,9 @@ class OrthancClient(HarvestingClient):
         resources = self.__get_detailed_data(resources)
 
         add_resources = self.__get_only_new(resources, ResourceMapping.STUDY, resource_map_function)
+        delete_resources = self.__get_only_to_remove(resources)
 
-        return add_resources, [], []
+        return add_resources, [], delete_resources
 
     def __get_detailed_data(self, resources) -> list:
         """
@@ -81,8 +82,15 @@ class OrthancClient(HarvestingClient):
     def __get_only_for_update(self, resources, resource_map_function) -> list:
         raise NotImplementedError
 
-    def __get_only_to_remove(self, resources):
-        raise NotImplementedError
+    def __get_only_to_remove(self, resources) -> list:
+        resources_uid = [resource['ID'] for resource in resources]
+        delete_resources = ResourceMapping.objects.filter(
+            category=ResourceMapping.STUDY
+        ).exclude(
+            uid__in=resources_uid
+        )
+
+        return list(delete_resources)
 
     def __get_request(self, path: str, params: dict) -> dict:
         """
