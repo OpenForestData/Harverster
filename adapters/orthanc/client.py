@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+from datetime import datetime
 from typing import List
 
 import requests
@@ -145,16 +146,44 @@ class OrthancClient(HarvestingClient):
         return res
 
     @staticmethod
-    def __base_mapping(obj):
+    def __email_mapping(obj: str) -> str:
+        if physician_name := obj:
+            return physician_name + '@test.pl'
+        else:
+            return 'unknown@test.pl'
+
+    @staticmethod
+    def __date_mapping(obj: str) -> str:
+        if date_value := obj.strip():
+            return datetime.strptime(date_value, '%Y%m%d').strftime('%Y-%m-%d')
+        else:
+            return datetime.now().strftime('%Y-%m-%d')
+
+    @staticmethod
+    def __unknown_value_mapping(obj: str, return_value: any = 'Unknown') -> str:
+        if unknown_value := obj.strip():
+            return unknown_value
+        else:
+            return return_value
+
+    def __base_mapping(self, obj) -> dict:
         return {
-            'title': obj['PatientMainDicomTags']['PatientName'] + ' ' + obj['MainDicomTags']['StudyID'],
-            'publicationDate': obj['MainDicomTags']['StudyDate'],
-            'author': [{'authorName': obj['MainDicomTags']['ReferringPhysicianName'],
-                        'authorAffiliation': 'Orthanc'}],
-            'datasetContact': [{'datasetContactEmail': obj['MainDicomTags']['ReferringPhysicianName'] + '@test.com',
-                                'datasetContactName': obj['MainDicomTags']['ReferringPhysicianName']}],
+            'title':
+                self.__unknown_value_mapping(obj['PatientMainDicomTags']['PatientName']
+                                             ) + ' ' + self.__unknown_value_mapping(obj['MainDicomTags']['StudyID']),
+            'publicationDate': self.__date_mapping(obj['MainDicomTags']['StudyDate']),
+            'author': [{
+                'authorName': self.__unknown_value_mapping(obj['MainDicomTags']['ReferringPhysicianName']),
+                'authorAffiliation': 'Orthanc'
+            }],
+            'datasetContact': [{
+                'datasetContactEmail': self.__email_mapping(obj['MainDicomTags']['ReferringPhysicianName']),
+                'datasetContactName': self.__unknown_value_mapping(obj['MainDicomTags']['ReferringPhysicianName'])
+            }],
             'subject': ['Earth and Environmental Sciences'],
-            'dsDescription': [{'dsDescriptionValue': obj['MainDicomTags'].get('StudyDescription', ' ')}],
-            'depositor': obj['MainDicomTags']['ReferringPhysicianName'],
-            'dateOfDeposit': obj['MainDicomTags']['StudyDate'],
+            'dsDescription': [{
+                'dsDescriptionValue': obj['MainDicomTags'].get('StudyDescription', ' ')
+            }],
+            'depositor': self.__unknown_value_mapping(obj['MainDicomTags']['ReferringPhysicianName']),
+            'dateOfDeposit': self.__date_mapping(obj['MainDicomTags']['StudyDate']),
         }
