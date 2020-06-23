@@ -27,16 +27,15 @@ class GeonodeClient(HarvestingClient):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.service_url += 'api/'
 
     def harvest(self):
         """
         Harvests every resource from Geonode and returns is as a list of Resources
         :return: list of harvested data from Geonode
         """
-        layers = self.get_resources('layers/', self.__map_layer_to_resource, ResourceMapping.LAYER)
-        maps = self.get_resources('maps/', self.__map_map_to_resource, ResourceMapping.MAP)
-        documents = self.get_resources('documents/', self.__map_document_to_resource, ResourceMapping.DOCUMENT)
+        layers = self.get_resources('api/layers/', self.__map_layer_to_resource, ResourceMapping.LAYER)
+        maps = self.get_resources('api/maps/', self.__map_map_to_resource, ResourceMapping.MAP)
+        documents = self.get_resources('api/documents/', self.__map_document_to_resource, ResourceMapping.DOCUMENT)
 
         add_data = layers[0] + maps[0] + documents[0]
         update_data = layers[1] + maps[1] + documents[1]
@@ -194,7 +193,7 @@ class GeonodeClient(HarvestingClient):
 
             file_data = {
                 'uuid': uuid,
-                'site_url': geomap['site_url'],
+                'site_url': self.service_url,
                 'detail_url': geomap['detail_url']
             }
 
