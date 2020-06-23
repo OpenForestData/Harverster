@@ -1,14 +1,16 @@
 import json
 import logging
 import os
+from datetime import datetime
 from typing import List
 
 import requests
+from django.utils import timezone
 from pyDataverse.models import Datafile
 
 from core.clients import HarvestingClient
 from core.exceptions import HttpException
-from core.models import Resource
+from core.models import Resource, ResourceMapping
 
 logger = logging.getLogger(__name__)
 
@@ -43,7 +45,9 @@ class OrthancClient(HarvestingClient):
         resources = results
         resources = self.__get_detailed_data(resources)
 
-        return resources, [], []
+        add_resources = self.__get_only_new(resources, ResourceMapping.STUDY, resource_map_function)
+
+        return add_resources, [], []
 
     def __get_detailed_data(self, resources) -> list:
         """
@@ -62,7 +66,17 @@ class OrthancClient(HarvestingClient):
         return detailed_resources
 
     def __get_only_new(self, resources, category, resource_map_function) -> list:
-        raise NotImplementedError
+        add_resources = []
+        for resource in resources:
+            uid = resource['ID']
+            resource_mapping = ResourceMapping.objects.filter(uid=uid).first()
+
+            if resource_mapping is None or resource_mapping.pid is None:
+                if resource_mapping is None:
+                    ResourceMapping(uid=uid, pid=None, last_update=timezone.now(), category=category).save()
+                add_resources.append(resource)
+
+        return [resource_map_function(resource) for resource in add_resources]
 
     def __get_only_for_update(self, resources, resource_map_function) -> list:
         raise NotImplementedError
@@ -132,16 +146,44 @@ class OrthancClient(HarvestingClient):
         return res
 
     @staticmethod
-    def __base_mapping(obj):
+    def __email_mapping(obj: str) -> str:
+        if physician_name := obj:
+            return physician_name + '@test.pl'
+        else:
+            return 'unknown@test.pl'
+
+    @staticmethod
+    def __date_mapping(obj: str) -> str:
+        if date_value := obj.strip():
+            return datetime.strptime(date_value, '%Y%m%d').strftime('%Y-%m-%d')
+        else:
+            return datetime.now().strftime('%Y-%m-%d')
+
+    @staticmethod
+    def __unknown_value_mapping(obj: str, return_value: any = 'Unknown') -> str:
+        if unknown_value := obj.strip():
+            return unknown_value
+        else:
+            return return_value
+
+    def __base_mapping(self, obj) -> dict:
         return {
-            'title': obj['PatientMainDicomTags']['PatientName'] + ' ' + obj['MainDicomTags']['StudyID'],
-            'publicationDate': obj['MainDicomTags']['StudyDate'],
-            'author': [{'authorName': obj['MainDicomTags']['RefferingPhysicianName'],
-                        'authorAffiliation': 'Orthanc'}],
-            'datasetContact': [{'datasetContactEmail': obj['MainDicomTags']['RefferingPhysicianName'] + '@test.com',
-                                'datasetContactName': obj['MainDicomTags']['RefferingPhysicianName']}],
+            'title':
+                self.__unknown_value_mapping(obj['PatientMainDicomTags']['PatientName']
+                                             ) + ' ' + self.__unknown_value_mapping(obj['MainDicomTags']['StudyID']),
+            'publicationDate': self.__date_mapping(obj['MainDicomTags']['StudyDate']),
+            'author': [{
+                'authorName': self.__unknown_value_mapping(obj['MainDicomTags']['ReferringPhysicianName']),
+                'authorAffiliation': 'Orthanc'
+            }],
+            'datasetContact': [{
+                'datasetContactEmail': self.__email_mapping(obj['MainDicomTags']['ReferringPhysicianName']),
+                'datasetContactName': self.__unknown_value_mapping(obj['MainDicomTags']['ReferringPhysicianName'])
+            }],
             'subject': ['Earth and Environmental Sciences'],
-            'dsDescription': [{'dsDescriptionValue': obj['MainDicomTags']['StudyDescription']}],
-            'depositor': obj['MainDicomTags']['RefferingPhysicianName'],
-            'dateOfDeposit': obj['MainDicomTags']['StudyDate'],
+            'dsDescription': [{
+                'dsDescriptionValue': obj['MainDicomTags'].get('StudyDescription', ' ')
+            }],
+            'depositor': self.__unknown_value_mapping(obj['MainDicomTags']['ReferringPhysicianName']),
+            'dateOfDeposit': self.__date_mapping(obj['MainDicomTags']['StudyDate']),
         }
