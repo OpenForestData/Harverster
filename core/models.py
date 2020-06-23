@@ -7,21 +7,34 @@ class Resource(object):
     Represents resource imported form harvested systems
     """
 
-    def __init__(self, parent_dataverse: str, dataset: Dataset = None, datafile: Datafile = None, uid: str = None):
+    def __init__(
+            self,
+            parent_dataverse: str,
+            dataset: Dataset = None,
+            datafile: Datafile = None,
+            uid: str = None,
+            pid: str = None
+    ):
         self.parent_dataverse = parent_dataverse
         if not dataset:
             dataset = Dataset()
         self.dataset = dataset
         self.datafile = datafile
         self.uid = uid
+        self.pid = pid
 
 
 class ResourceMapping(models.Model):
-    GRAFANA = 1
-    GEONODE = 2
+    DASHBOARD = 1
+    LAYER = 2
+    MAP = 3
+    DOCUMENT = 4
+
     category_choices = (
-        (GRAFANA, 'grafana'),
-        (GEONODE, 'geonode'),
+        (DASHBOARD, 'dashboard'),
+        (LAYER, 'layer'),
+        (MAP, 'map'),
+        (DOCUMENT, 'document'),
     )
 
     uid = models.fields.CharField(unique=True, max_length=40)
