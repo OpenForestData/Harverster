@@ -55,7 +55,8 @@ INSTALLED_APPS = [
 
     'core.apps.CoreConfig',
     'adapters.geonode.apps.GeonodeConfig',
-    'adapters.grafana.apps.GrafanaConfig'
+    'adapters.grafana.apps.GrafanaConfig',
+    'adapters.orthanc.apps.OrthancConfig'
 ]
 
 MIDDLEWARE = [
