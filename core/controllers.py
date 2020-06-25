@@ -62,7 +62,11 @@ class HarvestingController:
     def update_resources(self, resources: List[Resource]) -> None:
         logger.debug(f'Starting updating datasets from {self.dataverse_client.base_url}.')
         for resource in resources:
-            resp = self.dataverse_client.edit_dataset_metadata(resource.pid, resource.dataset.json(), is_replace=False)
+            resp = self.dataverse_client.edit_dataset_metadata(
+                resource.pid,
+                resource.dataset.json('dv_ed'),
+                is_replace=True
+            )
 
             if resp.status_code != requests.codes.ok:
                 raise HttpException(resp.text)
