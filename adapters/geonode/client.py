@@ -9,7 +9,6 @@ from django.utils import timezone
 from django.utils.dateparse import parse_datetime
 from pyDataverse.models import Datafile
 
-from adapters.geonode.models import HarvestingDatestamp
 from core.clients import HarvestingClient
 from core.exceptions import HttpException
 from core.models import Resource, ResourceMapping
@@ -19,7 +18,6 @@ logger = logging.getLogger(__name__)
 
 def http_exception_handler(e: HttpException):
     logger.exception(e)
-    HarvestingDatestamp(status='ERROR').save()
 
 
 class GeonodeClient(HarvestingClient):
@@ -30,8 +28,9 @@ class GeonodeClient(HarvestingClient):
 
     def harvest(self):
         """
-        Harvests every resource from Geonode and returns is as a list of Resources
-        :return: list of harvested data from Geonode
+        Harvests every resource from Geonode and returns as a list of add/update/remove Resources
+
+        :return: list of add/update/remove lists with Resources of harvested data from Geonode
         """
         layers = self.get_resources('api/layers/', self.__map_layer_to_resource, ResourceMapping.LAYER)
         maps = self.get_resources('api/maps/', self.__map_map_to_resource, ResourceMapping.MAP)
@@ -43,54 +42,56 @@ class GeonodeClient(HarvestingClient):
 
         return add_data, update_data, remove_data
 
-    def get_resources(self,
-                      resource_path,
-                      resource_map_function,
-                      resource_mapping_category,
-                      full_sync=False) -> (List[Resource],
-                                           List[Resource],
-                                           List[Resource]):
+    def get_resources(self, resource_path, resource_map_function, resource_mapping_category) -> (List[Resource],
+                                                                                                 List[Resource],
+                                                                                                 list):
         """
-        Fetch data from Geonode API endpoint, maps it to Resource and returns it as a list of Resources
+        Fetch data from Geonode API endpoint, maps it to Resource and returns it as a list of Resources to add, update
+        and remove
+
         :param resource_path: url relative path to API endpoint
         :param resource_map_function: function mapping data type retrieved from endpoint to Resource object
-        :param full_sync: True if resources all resources should be harvested
-        :return: list of fetched data as Resources list
+        :param resource_mapping_category: category of mapping showed in ResourceMapping category field
+        :return: list of add/update/remove fetched data as Resources lists
         """
-        params = {
+        params: dict = {
             'offset': 0,
             'order_by': 'date'
         }
 
-        if not full_sync:
-            params['date__gte'] = self.__get_last_sync_date()
-
         try:
-            results = self.__get_request(resource_path, params)
+            results: dict = self.__get_request(resource_path, params)
         except HttpException as e:
             http_exception_handler(e)
             return []
 
-        resources = results['objects']
+        resources: list = results['objects']
 
         while results['meta']['next'] is not None:
-            results = self.__get_next_page(resource_path, results['meta']['limit'], results['meta']['offset'])
+            results: dict = self.__get_next_page(resource_path, results['meta']['limit'], results['meta']['offset'])
             resources += results['objects']
 
-        # TODO: Check if timezone is needed
-        # HarvestingDatestamp(status='OK').save()
-
-        add_resources = self.__get_only_new(resources, resource_mapping_category, resource_map_function)
-        update_resources = self.__get_only_for_update(resources, resource_map_function)
-        delete_resources = self.__get_only_to_remove(resources, resource_mapping_category)
+        add_resources: list = self.__filter_new_resources(resources, resource_map_function, resource_mapping_category)
+        update_resources: list = self.__filter_update_resources(resources, resource_map_function)
+        delete_resources: list = self.__filter_remove_resources(resources, resource_mapping_category)
 
         return add_resources, update_resources, delete_resources
 
-    def __get_only_new(self, resources, category, resource_map_function) -> list:
-        add_resources = []
+    @staticmethod
+    def __filter_new_resources(resources: list, resource_map_function, category) -> List[Resource]:
+        """
+        Filter only new Resources in list of raw data from source
+
+        :param resources: fetched data from source with resources raw data
+        :param resource_map_function: mapping function for resource
+        :param category: category of resource for mapping
+        :return: list of mapped resources
+        """
+        add_resources: list = []
+
         for resource in resources:
-            uid = resource['uuid']
-            resource_mapping = ResourceMapping.objects.filter(uid=uid).first()
+            uid: str = resource['uuid']
+            resource_mapping: ResourceMapping = ResourceMapping.objects.filter(uid=uid).first()
 
             if resource_mapping is None or resource_mapping.pid is None:
                 if resource_mapping is None:
@@ -100,11 +101,20 @@ class GeonodeClient(HarvestingClient):
 
         return [resource_map_function(resource) for resource in add_resources]
 
-    def __get_only_for_update(self, resources, resource_map_function) -> list:
-        update_resources = []
+    @staticmethod
+    def __filter_update_resources(resources: list, resource_map_function) -> List[Resource]:
+        """
+        Filter only Resources to update in raw data from source
+
+        :param resources: fetched data from source with resources raw data
+        :param resource_map_function: mapping function for resource
+        :return: list of mapped resources
+        """
+        update_resources: list = []
+
         for resource in resources:
-            uid = resource['uuid']
-            resource_mapping = ResourceMapping.objects.filter(uid=uid).first()
+            uid: str = resource['uuid']
+            resource_mapping: ResourceMapping = ResourceMapping.objects.filter(uid=uid).first()
 
             resource['pid'] = resource_mapping.pid if resource_mapping.pid else None
             date = parse_datetime(resource['date'])
@@ -115,30 +125,37 @@ class GeonodeClient(HarvestingClient):
 
         return [resource_map_function(resource, create_file=False) for resource in update_resources]
 
-    def __get_only_to_remove(self, resources, resource_mapping_category):
-        resources_uid = [resource['uuid'] for resource in resources]
+    @staticmethod
+    def __filter_remove_resources(resources: list, category) -> list:
+        """
+        Filter Resources deleted in source
+
+        :param resources: fetched data from source with resources raw data
+        :param category: category of resource for mapping
+        :return: list of resources to delete
+        """
+        resources_uid: List[str] = [resource['uuid'] for resource in resources]
+
         delete_resources = ResourceMapping.objects.filter(
-            category=resource_mapping_category
+            category=category
         ).exclude(
             uid__in=resources_uid
         )
 
         return list(delete_resources)
 
-    def __get_next_page(self, path, limit, offset):
-        params = {
+    def __get_next_page(self, path: str, limit: int, offset: int):
+        params: dict = {
             'limit': limit,
             'offset': offset + limit
         }
-        return self.__get_request(path, params)
 
-    def __get_last_sync_date(self):
-        # TODO: get this from database
-        return '1990-01-01T12:34:00'
+        return self.__get_request(path, params)
 
     def __get_request(self, path: str, params: dict, headers: dict = None) -> dict:
         """
         Constructs GET request form given arguments, and loads json response as dict
+
         :param path: relative url path
         :param params: GET request parameters
         :param headers: request headers
@@ -146,65 +163,66 @@ class GeonodeClient(HarvestingClient):
         """
         # TODO: Remove verify argument
         response = requests.get(self.service_url + path, params=params, headers=headers, verify=False)
+
         if response.status_code != requests.codes.ok:
             msg = f'GET {self.service_url + path} with params {params} returned: {response.status_code} {response.text}'
             raise HttpException(msg)
 
         return json.loads(response.text)
 
-    def __map_layer_to_resource(self, layer, create_file: bool = True) -> Resource:
+    def __map_layer_to_resource(self, layer: dict, create_file: bool = True) -> Resource:
         """
         Maps layer to Resource object
+
         :param layer: dict to map to Resource
         :return: Resource representing layer
         """
-        uuid = layer['uuid']
+        uuid: str = layer['uuid']
 
         if create_file:
-            res = Resource(os.environ.get('LAYERS_PARENT_DATAVERSE'), uid=uuid)
+            res: Resource = Resource(os.environ.get('LAYERS_PARENT_DATAVERSE'), uid=uuid)
         else:
-            pid = layer['pid']
+            pid: str = layer['pid']
 
-            res = Resource(os.environ.get('LAYERS_PARENT_DATAVERSE'), uid=uuid, pid=pid)
+            res: Resource = Resource(os.environ.get('LAYERS_PARENT_DATAVERSE'), uid=uuid, pid=pid)
 
-        mapping = self.__base_mapping(layer)
+        mapping: dict = self.__base_mapping(layer)
         mapping.update(self.__bounding_box_mapping(layer))
 
         for key, val in mapping.items():
             setattr(res.dataset, key, val)
 
-        # TODO: Add datafile
-
         return res
 
-    def __map_map_to_resource(self, geomap, create_file: bool = True) -> Resource:
+    def __map_map_to_resource(self, geomap: dict, create_file: bool = True) -> Resource:
         """
         Maps geonode map to Resource object
+
         :param geomap: dict to map to Resource
         :return: Resource representing geonode map
         """
-        uuid = geomap['uuid']
+        uuid: str = geomap['uuid']
 
         # Todo: Move to separated function in core
         if create_file:
-            datafile = Datafile()
+            datafile: Datafile = Datafile()
 
             # Create file data
 
-            file_data = {
+            file_data: dict = {
                 'uuid': uuid,
                 'site_url': self.service_url,
                 'detail_url': geomap['detail_url']
             }
 
             # Create file
-            file_name = f'{uuid}.map_geonode'
+            file_name: str = f'{uuid}.map_geonode'
             # TODO: Fix file open localization
             file_object = open(file_name, 'w')
             json.dump(file_data, file_object)
 
             # Create datafile.data
-            data = {
+            data: dict = {
                 'description': 'External tool file',
                 'filename': file_name
             }
@@ -215,13 +233,13 @@ class GeonodeClient(HarvestingClient):
             # Set datafile data
             datafile.set(data=data)
 
-            res = Resource(os.environ.get('MAPS_PARENT_DATAVERSE'), datafile=datafile, uid=uuid)
+            res: Resource = Resource(os.environ.get('MAPS_PARENT_DATAVERSE'), datafile=datafile, uid=uuid)
         else:
-            pid = geomap['pid']
+            pid: str = geomap['pid']
 
-            res = Resource(os.environ.get('MAPS_PARENT_DATAVERSE'), uid=uuid, pid=pid)
+            res: Resource = Resource(os.environ.get('MAPS_PARENT_DATAVERSE'), uid=uuid, pid=pid)
 
-        mapping = self.__base_mapping(geomap)
+        mapping: dict = self.__base_mapping(geomap)
         mapping.update(self.__bounding_box_mapping(geomap))
 
         for key, val in mapping.items():
@@ -229,37 +247,48 @@ class GeonodeClient(HarvestingClient):
 
         return res
 
-    def __map_document_to_resource(self, document, create_file: bool = True) -> Resource:
+    def __map_document_to_resource(self, document: dict, create_file: bool = True) -> Resource:
         """
         Maps document to Resource object
+
         :param document: dict to map to Resource
         :return: Resource representing document
         """
-        uuid = document['uuid']
+        uuid: str = document['uuid']
 
         if create_file:
-            res = Resource(os.environ.get('DOCUMENTS_PARENT_DATAVERSE'), uid=uuid)
+            res: Resource = Resource(os.environ.get('DOCUMENTS_PARENT_DATAVERSE'), uid=uuid)
         else:
-            pid = document['pid'] if document['pid'] else None
+            pid: str = document['pid'] if document['pid'] else None
 
-            res = Resource(os.environ.get('DOCUMENTS_PARENT_DATAVERSE'), uid=uuid, pid=pid)
+            res: Resource = Resource(os.environ.get('DOCUMENTS_PARENT_DATAVERSE'), uid=uuid, pid=pid)
 
-        mapping = self.__base_mapping(document)
+        mapping: dict = self.__base_mapping(document)
 
         for key, val in mapping.items():
             setattr(res.dataset, key, val)
 
-        # TODO: Add datafile ?
-
         return res
 
     def __create_alternative_url(self, obj: str) -> str:
+        """
+        Create alternative url for Resource and return in full form
+
+        :param obj: detail url data of resource
+        :return: alternative url of resource
+        """
         service_url: str = self.service_url if self.service_url[-1] == '/' else self.service_url[:-1]
         detail_url: str = obj[1:] if obj[0] == '/' else obj
 
         return service_url + detail_url
 
-    def __base_mapping(self, obj):
+    def __base_mapping(self, obj: dict) -> dict:
+        """
+        Map raw data to compatible format for dataverse Resource
+
+        :param obj: resource raw data to map
+        :return: mapped resource
+        """
         return {
             'title': obj['title'],
             'author': [{'authorName': obj['owner_name'],
@@ -272,7 +301,13 @@ class GeonodeClient(HarvestingClient):
         }
 
     @staticmethod
-    def __bounding_box_mapping(obj):
+    def __bounding_box_mapping(obj: dict) -> dict:
+        """
+        Map geographic data to dataverse compatible format
+
+        :param obj: box mapping raw data
+        :return: mapped geographicBoundingBox
+        """
         return {
             'geographicBoundingBox': [{'westLongitude': obj['bbox_x0'], 'eastLongitude': obj['bbox_x1'],
                                        'northLongitude': obj['bbox_y0'], 'southLongitude': obj['bbox_y1']}]
