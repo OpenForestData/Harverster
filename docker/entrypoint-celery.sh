@@ -8,4 +8,4 @@ cp /app/example.env /app/harvester/.env
 cp /app/example.env /app/.env
 
 cd /app/
-celery -A harvester worker -l=INFO
+celery flower -A harvester worker -l=INFO --address=0.0.0.0
