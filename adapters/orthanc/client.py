@@ -46,9 +46,10 @@ class OrthancClient(HarvestingClient):
         resources = self.__get_detailed_data(resources)
 
         add_resources = self.__get_only_new(resources, ResourceMapping.STUDY, resource_map_function)
+        update_resources = self.__get_only_for_update(resources, resource_map_function)
         delete_resources = self.__get_only_to_remove(resources)
 
-        return add_resources, [], delete_resources
+        return add_resources, update_resources, delete_resources
 
     def __get_detailed_data(self, resources) -> list:
         """
@@ -80,7 +81,19 @@ class OrthancClient(HarvestingClient):
         return [resource_map_function(resource) for resource in add_resources]
 
     def __get_only_for_update(self, resources, resource_map_function) -> list:
-        raise NotImplementedError
+        update_resources = []
+        for resource in resources:
+            uid = resource['ID']
+            resource_mapping = ResourceMapping.objects.filter(uid=uid).first()
+
+            resource['pid'] = resource_mapping.pid if resource_mapping.pid else None
+            date = datetime.strptime(resource['LastUpdate'], '%Y%m%dT%H%M%S')
+
+            if resource_mapping is not None and (
+                    resource_mapping.last_update.replace(tzinfo=None) < date):
+                update_resources.append(resource)
+
+        return [resource_map_function(resource, create_file=False) for resource in update_resources]
 
     def __get_only_to_remove(self, resources) -> list:
         resources_uid = [resource['ID'] for resource in resources]
@@ -144,7 +157,9 @@ class OrthancClient(HarvestingClient):
 
             res = Resource(os.environ.get('STUDIES_PARENT_DATAVERSE'), datafile=datafile, uid=uid)
         else:
-            res = Resource(os.environ.get('STUDIES_PARENT_DATAVERSE'), uid=uid)
+            pid = study['pid']
+
+            res = Resource(os.environ.get('STUDIES_PARENT_DATAVERSE'), uid=uid, pid=pid)
 
         mapping = self.__base_mapping(study)
 
