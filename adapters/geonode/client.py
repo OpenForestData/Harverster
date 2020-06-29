@@ -144,7 +144,7 @@ class GeonodeClient(HarvestingClient):
 
         return list(delete_resources)
 
-    def __get_next_page(self, path, limit, offset):
+    def __get_next_page(self, path: str, limit: int, offset: int):
         params: dict = {
             'limit': limit,
             'offset': offset + limit
