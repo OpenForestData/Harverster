@@ -4,4 +4,4 @@
 /app/docker/wait_for.sh harvester_redis:6379 -t 15 -- echo "Redis (harvester_redis) is up!"
 
 cd /app/
-celery -A harvester worker -l=INFO
+celery -A harvester worker -l info -B --scheduler django_celery_beat.schedulers:DatabaseScheduler
