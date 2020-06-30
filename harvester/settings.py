@@ -9,7 +9,6 @@ https://docs.djangoproject.com/en/2.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/2.2/ref/settings/
 """
-import json
 import os
 from ast import literal_eval
 
@@ -52,6 +51,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'corsheaders',
     'django_celery_beat',
+    'django_celery_results',
 
     'core.apps.CoreConfig',
     'adapters.geonode.apps.GeonodeConfig',
@@ -103,23 +103,7 @@ DATABASES = {
         'HOST': os.environ.get("DB_HOST"),
         'PORT': '5432',
     },
-    'mongodb': {
-        "ENGINE": 'djongo',
-        "NAME": os.environ.get("MONGO_DATABASE"),
-        'ENFORCE_SCHEMA': True,
-        'CLIENT': {
-            'host': os.environ.get("MONGO_HOST"),
-            'port': os.environ.get("MONGO_PORT", 27017),
-            'username': os.environ.get("MONGO_USER"),
-            'password': os.environ.get("MONGO_PASSWORD"),
-        },
-    }
 }
-
-DATABASE_ROUTERS = ('core.database_router.DBRouter',)
-
-NOSQL_MODELS = ['HarvestingDatestamp', 'GeonodeResourceIdMapping']
-NOSQL_DATABASE = 'mongodb'
 
 # Password validation
 # https://docs.djangoproject.com/en/2.2/ref/settings/#auth-password-validators
@@ -158,17 +142,13 @@ USE_TZ = True
 STATIC_URL = '/static/'
 
 # Celery
+CELERY_RESULT_BACKEND = 'django-db'
 CELERY_TASK_EAGER_PROPAGATES = True
 CELERY_BROKER_URL = os.environ.get('CELERY_BROKER_URL')
-
-# App specific settings
-HARVESTED_SYSTEM = os.environ.get('HARVESTED_SYSTEM')
-HARVESTED_PERIOD = json.loads(os.environ['HARVESTED_PERIOD'])
 
 # Dataverse
 DATAVERSE_URL = os.environ.get('DATAVERSE_URL')
 DATAVERSE_API_KEY = os.environ.get('DATAVERSE_API_KEY')
-
 
 # Geonode
 GEONODE_OFFSET = os.environ.get('GEONODE_OFFSET', 1000)
@@ -177,6 +157,6 @@ CLIENTS_DICT = {
     'geonode': {
         'module': 'adapters.geonode.client',
         'class': 'GeonodeClient',
-        'url': 'http://gis.openforestdata.pl/'
+        'url': 'https://gis.openforestdata.pl/'
     }
 }
