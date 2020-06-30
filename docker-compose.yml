@@ -43,20 +43,6 @@ services:
     networks:
       - harvester_network
 
-  harvester_mongo:
-    container_name: "harvester_mongo"
-    image: "mongo:4.2"
-    restart: unless-stopped
-    volumes:
-      - init_db:/docker-entrypoint-initdb.d
-      - mongo_data:/data/db
-    environment:
-      - MONGO_INITDB_DATABASE=harvester
-      - MONGO_INITDB_ROOT_USERNAME=harvester
-      - MONGO_INITDB_ROOT_PASSWORD=harvester_password
-    networks:
-      - harvester_network
-
   harvester_redis:
     container_name: "harvester_redis"
     image: "redis:6-alpine"
@@ -76,17 +62,11 @@ services:
       - SECRET_KEY=abctest
       - API_PORT=8000
       - DB_HOST=harvester_db
-      - DB_ENGINE=djongo
       - DB_DATABASE=harvester
       - DB_USER=harvesteruser
       - DB_PASSWORD=ctwB28e
-      - MONGO_HOST=harvester_mongo
-      - MONGO_ENGINE=djongo
-      - MONGO_DATABASE=harvester
-      - MONGO_USER=harvester
-      - MONGO_PASSWORD=harvester_password
       - CELERY_BROKER_URL=redis://harvester_redis:6379/0
-      - DATAVERSE_URL=https://dataverse.whiteaster.com/
+      - DATAVERSE_URL=https://dataverse.whiteaster.com
       - DATAVERSE_API_KEY=9c9d2213-482d-405d-9490-96b984b96898
       - LAYERS_PARENT_DATAVERSE=layers
       - MAPS_PARENT_DATAVERSE=maps
@@ -116,11 +96,9 @@ services:
 
 # volumes definiton
 volumes:
-  init_db:
   harvester_db:
   redis_data:
-  mongo_data:
-    
+
 # network definition
 networks:
   harvester_network:
