@@ -17,4 +17,4 @@ def get_client(name):
     client_data = client_dict[name]
     client_class = getattr(importlib.import_module(client_data['module']), client_data['class'])
 
-    return client_class(client_data['url'])
+    return client_class(client_data['url'], client_data['api_key'])
