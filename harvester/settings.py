@@ -157,6 +157,19 @@ CLIENTS_DICT = {
     'geonode': {
         'module': 'adapters.geonode.client',
         'class': 'GeonodeClient',
-        'url': 'https://gis.openforestdata.pl/'
+        'url': 'https://gis.openforestdata.pl/',
+        'api_key': None
+    },
+    'grafana': {
+        'module': 'adapters.grafana.client',
+        'class': 'GrafanaClient',
+        'url': 'http://192.168.1.97:3000',
+        'api_key': 'eyJrIjoiRUxabFFRbE9saDRZamxFZHVtV3lJblM5MFExaG1BZ0giLCJuIjoiVGVzdCIsImlkIjoxfQ=='
+    },
+    'orthanc': {
+        'module': 'adapters.orthanc.client',
+        'class': 'OrthancClient',
+        'url': 'http://212.33.83.34/',
+        'api_key': None
     }
 }
