@@ -72,7 +72,7 @@ class OrthancClient(HarvestingClient):
         return detailed_resources
 
     @staticmethod
-    def __filter_new_resources(resources: list, category, resource_map_function) -> list:
+    def __filter_new_resources(resources: list, resource_map_function, category) -> list:
         """
         Filter only new Resources in list of raw data from source
 
@@ -85,11 +85,12 @@ class OrthancClient(HarvestingClient):
 
         for resource in resources:
             uid: str = resource['ID']
-            resource_mapping = ResourceMapping.objects.filter(uid=uid).first()
+            resource_mapping: ResourceMapping = ResourceMapping.objects.filter(uid=uid).first()
 
             if resource_mapping is None or resource_mapping.pid is None:
                 if resource_mapping is None:
                     ResourceMapping(uid=uid, pid=None, last_update=timezone.now(), category=category).save()
+
                 add_resources.append(resource)
 
         return [resource_map_function(resource) for resource in add_resources]
@@ -114,6 +115,7 @@ class OrthancClient(HarvestingClient):
 
             if resource_mapping is not None and (
                     resource_mapping.last_update.replace(tzinfo=None) < date):
+
                 update_resources.append(resource)
 
         return [resource_map_function(resource, create_file=False) for resource in update_resources]
