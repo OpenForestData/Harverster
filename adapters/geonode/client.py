@@ -3,9 +3,9 @@ import logging
 import os
 from typing import List
 
+import pytz
 import requests
 from django.conf import settings
-from django.utils import timezone
 from django.utils.dateparse import parse_datetime
 from pyDataverse.models import Datafile
 
@@ -95,7 +95,8 @@ class GeonodeClient(HarvestingClient):
 
             if resource_mapping is None or resource_mapping.pid is None:
                 if resource_mapping is None:
-                    ResourceMapping(uid=uid, pid=None, last_update=timezone.now(), category=category).save()
+                    last_update = parse_datetime(resource['date']).replace(tzinfo=pytz.UTC)
+                    ResourceMapping(uid=uid, pid=None, last_update=last_update, category=category).save()
 
                 add_resources.append(resource)
 
