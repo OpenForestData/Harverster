@@ -69,7 +69,8 @@ class HarvestingController:
         logger.debug(f'Starting updating datasets from {self.dataverse_client.base_url}.')
 
         if update_publish_type not in (None, 'major', 'minor'):
-            raise ValueError(f"Update_publish_type can only take values from (None, 'major', 'minor')")
+            raise ValueError(
+                f"Update_publish_type can only take values from (None, 'major', 'minor'), given {update_publish_type}")
 
         for resource in resources:
             resp = self.dataverse_client.edit_dataset_metadata(
