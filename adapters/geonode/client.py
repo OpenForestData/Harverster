@@ -6,7 +6,6 @@ from typing import List
 import pytz
 import requests
 from django.conf import settings
-from django.utils import timezone
 from django.utils.dateparse import parse_datetime
 from pyDataverse.models import Datafile
 
