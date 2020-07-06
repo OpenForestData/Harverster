@@ -20,6 +20,11 @@ class HarvestingController:
         self.dataverse_client = dataverse_client
 
     def run_harvest(self) -> (List[Resource], List[Resource], List[Resource]):
+        """
+        Run harvesting client and return list of resources to add/update/remove
+
+        :return: list of add/update/remove resources
+        """
         logger.debug(f'Starting harvest from {self.harvesting_client.service_url}.')
 
         # Get all results
@@ -28,6 +33,13 @@ class HarvestingController:
         return result
 
     def add_resources(self, resources: List[Resource], publish_added: bool = False) -> None:
+        """
+        Add every resource from list to dataverse and publish if specified
+
+        :param resources: list of resources
+        :param publish_added: specifies publishing dataset after adding to dataverse or not
+        :return: None
+        """
         logger.debug(f'Starting upload to {self.dataverse_client.base_url}.')
 
         for resource in resources:
@@ -53,6 +65,12 @@ class HarvestingController:
         logger.debug(f'Upload to {self.dataverse_client.base_url} completed.')
 
     def delete_resources(self, resources: List[Resource]) -> None:
+        """
+        Delete every resource in list from dataverse
+
+        :param resources: list of resources
+        :return: None
+        """
         logger.debug(f'Starting removing datasets from {self.dataverse_client.base_url}.')
 
         for resource in resources:
@@ -66,6 +84,13 @@ class HarvestingController:
         logger.debug(f'Removing datasets from {self.dataverse_client.base_url} completed.')
 
     def update_resources(self, resources: List[Resource], update_publish_type=None) -> None:
+        """
+        Update every resource from list to dataverse and publish if specified
+
+        :param resources: list of resources
+        :param update_publish_type: specifies publishing method (None, 'major', 'minor')
+        :return: None
+        """
         logger.debug(f'Starting updating datasets from {self.dataverse_client.base_url}.')
 
         if update_publish_type not in (None, 'major', 'minor'):
@@ -92,6 +117,13 @@ class HarvestingController:
         logger.debug(f'Updating datasets from {self.dataverse_client.base_url} completed.')
 
     def publish_resource(self, pid: str, type_version: str = 'minor') -> None:
+        """
+        Publish dataset with given type of version
+
+        :param pid: persistentID of dataset
+        :param type_version: type of publishing 'major' or 'minor'
+        :return: None
+        """
         logger.debug(f'Starting publishing resource with persistentId {pid} with type={type_version}')
         resp = self.dataverse_client.publish_dataset(pid, type=type_version)
 
