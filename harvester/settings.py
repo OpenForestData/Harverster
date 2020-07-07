@@ -9,7 +9,6 @@ https://docs.djangoproject.com/en/2.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/2.2/ref/settings/
 """
-
 import os
 from ast import literal_eval
 
@@ -24,12 +23,12 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # See https://docs.djangoproject.com/en/2.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get('SECRET_KEY', 'abcTEST')
+SECRET_KEY = os.environ.get('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = literal_eval(os.environ.get('DEBUG', 'True'))
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOW_CREDENTIALS = True
@@ -51,6 +50,13 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'corsheaders',
+    'django_celery_beat',
+    'django_celery_results',
+
+    'core.apps.CoreConfig',
+    'adapters.geonode.apps.GeonodeConfig',
+    'adapters.grafana.apps.GrafanaConfig',
+    'adapters.orthanc.apps.OrthancConfig'
 ]
 
 MIDDLEWARE = [
@@ -84,24 +90,20 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'harvester.wsgi.application'
 
-
 # Database
 # https://docs.djangoproject.com/en/2.2/ref/settings/#databases
 
+# Database Configuration
 DATABASES = {
     'default': {
-        "ENGINE": 'djongo',
-        "NAME": os.environ.get("DB_DATABASE", 'harvester'),
-        'ENFORCE_SCHEMA': True,
-        'CLIENT': {
-            'host': os.environ.get("DB_HOST", "localhost"),
-            'port': os.environ.get("DB_PORT", 27017),
-            'username': os.environ.get("DB_USER", "harvester"),
-            'password': os.environ.get("DB_PASSWORD", "harvester_password"),
-        },
-    }
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': os.environ.get("DB_NAME"),
+        'USER': os.environ.get("DB_USER"),
+        'PASSWORD': os.environ.get("DB_PASSWORD", 5432),
+        'HOST': os.environ.get("DB_HOST"),
+        'PORT': '5432',
+    },
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/2.2/ref/settings/#auth-password-validators
@@ -121,7 +123,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
 # Internationalization
 # https://docs.djangoproject.com/en/2.2/topics/i18n/
 
@@ -135,8 +136,40 @@ USE_L10N = True
 
 USE_TZ = True
 
-
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.2/howto/static-files/
 
-STATIC_URL = '/static/'
+STATIC_URL = '/static-backend/'
+
+# Celery
+CELERY_RESULT_BACKEND = 'django-db'
+CELERY_TASK_EAGER_PROPAGATES = True
+CELERY_BROKER_URL = os.environ.get('CELERY_BROKER_URL')
+
+# Dataverse
+DATAVERSE_URL = os.environ.get('DATAVERSE_URL')
+DATAVERSE_API_KEY = os.environ.get('DATAVERSE_API_KEY')
+
+# Geonode
+GEONODE_OFFSET = os.environ.get('GEONODE_OFFSET', 1000)
+
+CLIENTS_DICT = {
+    'geonode': {
+        'module': 'adapters.geonode.client',
+        'class': 'GeonodeClient',
+        'url': 'https://gis.openforestdata.pl/',
+        'api_key': None
+    },
+    'grafana': {
+        'module': 'adapters.grafana.client',
+        'class': 'GrafanaClient',
+        'url': 'http://192.168.1.97:3000',
+        'api_key': 'eyJrIjoiRUxabFFRbE9saDRZamxFZHVtV3lJblM5MFExaG1BZ0giLCJuIjoiVGVzdCIsImlkIjoxfQ=='
+    },
+    'orthanc': {
+        'module': 'adapters.orthanc.client',
+        'class': 'OrthancClient',
+        'url': 'http://212.33.83.34/',
+        'api_key': None
+    }
+}
