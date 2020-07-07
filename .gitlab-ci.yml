@@ -1,14 +1,24 @@
 image: python:3.8-alpine
 
 stages:
+    - sonarqube
     - code checks
     - build
 
+sonarqube:
+    image: sonarsource/sonar-scanner-cli
+    stage: sonarqube
+    before_script: []
+    script:
+        - sonar-scanner -Dsonar.projectKey=Harvester -Dsonar.sources=. -Dsonar.host.url=https://sonarqube.whiteaster.com -Dsonar.login=e126c39bede52b892bfb1167951b54576a6690ca
+    only:
+        - master
+
 Flake8:
-  stage: code checks
-  script:
-    - pip install flake8
-    - flake8 adapters/ core/ harvester/
+    stage: code checks
+    script:
+        - pip install flake8
+        - flake8 adapters/ core/ harvester/
 
 Build docker dev image:
     image: 
