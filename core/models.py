@@ -2,9 +2,10 @@ from django.db import models
 from pyDataverse.models import Dataset, Datafile
 
 
-class Resource(object):
+class Resource:
     """
     Represents resource imported form harvested systems
+
     """
 
     def __init__(
@@ -25,6 +26,9 @@ class Resource(object):
 
 
 class ResourceMapping(models.Model):
+    """
+    Model used for mapping resources and store last_update date
+    """
     DASHBOARD = 1
     LAYER = 2
     MAP = 3

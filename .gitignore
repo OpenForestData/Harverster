@@ -245,3 +245,7 @@ django_warning_logs.log
 # Mapping files
 **.dashboard_grafana
 **.map_geonode
+**.studies_orthanc
+
+# Sphinx
+_build/
