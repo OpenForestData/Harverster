@@ -54,6 +54,8 @@ services:
     container_name: "harvester_backend"
     image: "registry.gitlab.whiteaster.com/openforestdata/backend/harverster:latest"
     restart: unless-stopped
+    volumes:
+      - admin_statics:/usr/local/lib/python3.8/site-packages/django/contrib/admin/static/
     environment:
       - DEBUG=False
       - SECRET_KEY=SECRET_KEY_REPLACE
@@ -93,6 +95,8 @@ services:
 volumes:
   harvester_db:
   redis_data:
+  flower_statics:
+  admin_statics:
 
 # network definition
 networks:

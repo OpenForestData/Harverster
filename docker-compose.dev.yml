@@ -58,6 +58,7 @@ services:
     restart: unless-stopped
     volumes:
       - ./:/app/
+      - admin_statics:/usr/local/lib/python3.8/site-packages/django/contrib/admin/static/
     environment:
       - DEBUG=True
       - SECRET_KEY=SECRET_KEY_REPLACE
@@ -144,6 +145,8 @@ services:
 volumes:
   harvester_db:
   redis_data:
+  flower_statics:
+  admin_statics:
 
 # network definition
 networks:
