@@ -224,11 +224,11 @@ enable =blacklisted-name,
         no-else-return,
         empty-docstring,
         invalid-characters-in-docstring,
-        missing-docstring,
+        missing-class-docstring,
+        missing-function-docstring,
         import-outside-toplevel,
         duplicate-code,
         feature-toggle-needs-doc,
-        no-absolute-import,
         no-init,
         no-self-use,
         nonzero-method,
@@ -298,12 +298,14 @@ disable=misplaced-comparison-constant,
         suppressed-message,
         unichr-builtin,
         unicode-builtin,
+        no-absolute-import,
         unpacking-in-except,
         using-cmp-argument,
         xrange-builtin,
         zip-builtin-not-iterating,
         abstract-method,
         logging-fstring-interpolation,
+        missing-module-docstring,
 
 
 [REPORTS]
@@ -333,8 +335,8 @@ argument-rgx = [a-z_][a-z0-9_]{2,30}$
 variable-rgx = [a-z_][a-z0-9_]{2,30}$
 class-attribute-rgx = ([A-Za-z_][A-Za-z0-9_]{2,30}|(__.*__))$
 inlinevar-rgx = [A-Za-z_][A-Za-z0-9_]*$
-good-names = f,i,j,k,db,ex,Run,_,__
-bad-names = foo,bar,baz,toto,tutu,tata
+good-names = f,i,j,k,db,Run,_,__
+bad-names = foo,bar,baz,toto,tutu,tata,ex
 no-docstring-rgx = __.*__$|test_.+|setUp$|setUpClass$|tearDown$|tearDownClass$|Meta$
 docstring-min-length = 5
 
@@ -354,7 +356,7 @@ single-line-if-stmt=no
 
 [LOGGING]
 
-logging-format-style=old
+logging-format-style=new
 logging-modules=logging
 
 
