@@ -2,7 +2,7 @@ from django.db import models
 from pyDataverse.models import Dataset, Datafile
 
 
-class Resource(object):
+class Resource:
     """
     Represents resource imported form harvested systems
 
