@@ -1,0 +1,104 @@
+version: '3.7'
+
+services:
+
+  harvester_traefik:
+    image: "traefik:v2.2"
+    container_name: "harvester_traefik"
+    restart: unless-stopped
+    command:
+        - "--providers.docker=true"
+        - "--providers.docker.exposedbydefault=true"
+        - "--api.insecure=true"
+        - "--entrypoints.web.address=:80"
+        - "--entrypoints.web-secure.address=:443"
+        - "--entrypoints.web.forwardedheaders.insecure"
+        - "--entrypoints.web.proxyprotocol.insecure"
+        - "--certificatesresolvers.letsencrypt.acme.email=admin@whiteaster.com"
+        - "--certificatesresolvers.letsencrypt.acme.storage=/acme.json"
+        - "--certificatesresolvers.letsencrypt.acme.tlschallenge=true"
+    labels:
+        - "traefik.http.routers.http-catchall.rule=hostregexp(`{host:.+}`)"
+        - "traefik.http.routers.http-catchall.entrypoints=web"
+        - "traefik.http.routers.http-catchall.middlewares=redirect-to-https"
+        - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
+    ports:
+        - 80:80
+        - 443:443
+    volumes: 
+        - "/var/run/docker.sock:/var/run/docker.sock:ro"
+    networks: 
+        - harvester_network
+
+  harvester_db:
+    container_name: "harvester_db"
+    image: "postgres:12-alpine"
+    restart: unless-stopped
+    volumes:
+      - harvester_db:/var/lib/postgresql
+    environment:
+      - POSTGRES_USER=harvesteruser
+      - POSTGRES_PASSWORD=ctwB28e
+      - POSTGRES_DB=harvester
+    networks:
+      - harvester_network
+
+  harvester_redis:
+    container_name: "harvester_redis"
+    image: "redis:6-alpine"
+    restart: unless-stopped
+    networks: 
+      - harvester_network
+
+  harvester_backend: &harvester_backend
+    container_name: "harvester_backend"
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    volumes:
+      - ./:/app/
+    environment:
+      - DEBUG=True
+      - SECRET_KEY=SECRET_KEY_REPLACE
+      - DB_HOST=harvester_db
+      - DB_USER=harvesteruser
+      - DB_PASSWORD=ctwB28e
+      - CELERY_BROKER_URL=redis://harvester_redis:6379/0
+      - DATAVERSE_URL=https://dataverse.whiteaster.com
+      - DATAVERSE_API_KEY=9c9d2213-482d-405d-9490-96b984b96898
+      - LAYERS_PARENT_DATAVERSE=layers
+      - MAPS_PARENT_DATAVERSE=maps
+      - DOCUMENTS_PARENT_DATAVERSE=documents
+      - DASHBOARDS_PARENT_DATAVERSE=dashboards
+      - STUDIES_PARENT_DATAVERSE=studies
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.harvester_backend.rule=Host(`${URL}`)
+      - traefik.http.services.harvester_backend.loadbalancer.server.port=8000
+      - traefik.http.routers.harvester_backend.entrypoints=web-secure
+      - traefik.http.middlewares.harvester_backend.headers.accesscontrolallowmethods=GET,OPTIONS,PUT,POST,DELETE,PATCH
+      - traefik.http.middlewares.harvester_backend.headers.accesscontrolalloworigin=origin-list-or-null
+      - traefik.http.middlewares.harvester_backend.headers.accesscontrolmaxage=100
+      - traefik.http.middlewares.harvester_backend.headers.addvaryheader=true
+      - traefik.http.routers.harvester_backend.tls=true
+      - traefik.http.routers.harvester_backend.tls.certresolver=letsencrypt
+    networks:
+      - harvester_network
+
+  harvester_celery:
+    <<: *harvester_backend
+    image: "harvester_celery"
+    container_name: "harvester_celery"
+    labels: []
+    command: 'bash -c "/app/docker/entrypoint-celery.sh"'
+
+# volumes definiton
+volumes:
+  harvester_db:
+  redis_data:
+
+# network definition
+networks:
+  harvester_network:
+    driver: bridge

@@ -25,9 +25,9 @@ services:
     ports:
         - 80:80
         - 443:443
-    volumes: 
+    volumes:
         - "/var/run/docker.sock:/var/run/docker.sock:ro"
-    networks: 
+    networks:
         - harvester_network
 
   harvester_db:
@@ -37,8 +37,8 @@ services:
     volumes:
       - harvester_db:/var/lib/postgresql
     environment:
-      - POSTGRES_USER=harvesteruser
-      - POSTGRES_PASSWORD=ctwB28e
+      - POSTGRES_USER=harvester_user
+      - POSTGRES_PASSWORD=harvester_passowrd
       - POSTGRES_DB=harvester
     networks:
       - harvester_network
@@ -47,27 +47,22 @@ services:
     container_name: "harvester_redis"
     image: "redis:6-alpine"
     restart: unless-stopped
-    networks: 
+    networks:
       - harvester_network
 
   harvester_backend: &harvester_backend
     container_name: "harvester_backend"
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: "registry.gitlab.whiteaster.com/openforestdata/backend/harverster:latest"
     restart: unless-stopped
     environment:
-      - DEBUG=True
-      - HOST_URL=0.0.0.0
-      - SECRET_KEY=abctest
-      - API_PORT=8000
+      - DEBUG=False
+      - SECRET_KEY=SECRET_KEY_REPLACE
       - DB_HOST=harvester_db
-      - DB_DATABASE=harvester
-      - DB_USER=harvesteruser
-      - DB_PASSWORD=ctwB28e
+      - DB_USER=harvester_user
+      - DB_PASSWORD=harvester_passowrd
       - CELERY_BROKER_URL=redis://harvester_redis:6379/0
-      - DATAVERSE_URL=https://dataverse.whiteaster.com
-      - DATAVERSE_API_KEY=9c9d2213-482d-405d-9490-96b984b96898
+      - DATAVERSE_URL=https://test.dataverse.com
+      - DATAVERSE_API_KEY=DATAVERSE_API_KEY_REPLACE
       - LAYERS_PARENT_DATAVERSE=layers
       - MAPS_PARENT_DATAVERSE=maps
       - DOCUMENTS_PARENT_DATAVERSE=documents
