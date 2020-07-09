@@ -1,18 +1,18 @@
 image: python:3.8-alpine
 variables:
-    DEBUG: False
-    SECRET_KEY: SECRET_KEY_REPLACE
-    DB_HOST: harvester_db
-    DB_USER: harvester_user
-    DB_PASSWORD: harvester_passowrd
-    CELERY_BROKER_URL: redis://harvester_redis:6379/0
-    DATAVERSE_URL: https://test.dataverse.com
-    DATAVERSE_API_KEY: DATAVERSE_API_KEY_REPLACE
-    LAYERS_PARENT_DATAVERSE: layers
-    MAPS_PARENT_DATAVERSE: maps
-    DOCUMENTS_PARENT_DATAVERSE: documents
-    DASHBOARDS_PARENT_DATAVERSE: dashboards
-    STUDIES_PARENT_DATAVERSE: studies
+    DEBUG: "False"
+    SECRET_KEY: "SECRET_KEY_REPLACE"
+    DB_HOST: "harvester_db"
+    DB_USER: "harvester_user"
+    DB_PASSWORD: "harvester_passowrd"
+    CELERY_BROKER_URL: "redis://harvester_redis:6379/0"
+    DATAVERSE_URL: "https://test.dataverse.com"
+    DATAVERSE_API_KEY: "DATAVERSE_API_KEY_REPLACE"
+    LAYERS_PARENT_DATAVERSE: "layers"
+    MAPS_PARENT_DATAVERSE: "maps"
+    DOCUMENTS_PARENT_DATAVERSE: "documents"
+    DASHBOARDS_PARENT_DATAVERSE: "dashboards"
+    STUDIES_PARENT_DATAVERSE: "studies"
 
 stages:
     - code checks
