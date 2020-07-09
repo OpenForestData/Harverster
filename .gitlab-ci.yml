@@ -30,7 +30,7 @@ Sphinx documentation:
     before_script:
         - apk add make postgresql-libs gcc musl-dev postgresql-dev python3-dev git
         - pip install -r requirements.txt
-        - pip install sphinx sphinx_rtd_themesphinx-autodoc-typehints
+        - pip install sphinx sphinx_rtd_theme sphinx-autodoc-typehints
     script:
         - cd docs/
         - make html
