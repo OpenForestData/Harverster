@@ -305,6 +305,7 @@ disable=bad-continuation,
         xrange-builtin,
         zip-builtin-not-iterating,
         abstract-method,
+        logging-fstring-interpolation,
 
 
 [REPORTS]
