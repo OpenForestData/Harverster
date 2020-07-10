@@ -1,8 +1,23 @@
 image: python:3.8-alpine
+variables:
+    DEBUG: "False"
+    SECRET_KEY: "SECRET_KEY_REPLACE"
+    DB_HOST: "harvester_db"
+    DB_USER: "harvester_user"
+    DB_PASSWORD: "harvester_passowrd"
+    CELERY_BROKER_URL: "redis://harvester_redis:6379/0"
+    DATAVERSE_URL: "https://test.dataverse.com"
+    DATAVERSE_API_KEY: "DATAVERSE_API_KEY_REPLACE"
+    LAYERS_PARENT_DATAVERSE: "layers"
+    MAPS_PARENT_DATAVERSE: "maps"
+    DOCUMENTS_PARENT_DATAVERSE: "documents"
+    DASHBOARDS_PARENT_DATAVERSE: "dashboards"
+    STUDIES_PARENT_DATAVERSE: "studies"
 
 stages:
     - sonarqube
     - code checks
+    - documentation
     - build
 
 sonarqube:
@@ -19,6 +34,50 @@ Flake8:
     script:
         - pip install flake8
         - flake8 adapters/ core/ harvester/
+
+PyLint:
+    stage: code checks
+    allow_failure: true
+    before_script:
+        - apk add make postgresql-libs gcc musl-dev postgresql-dev python3-dev git
+        - pip install -r requirements.txt
+    script:
+        - pip install pylint pylint_django pylint_requests
+        - pylint --rcfile ./.pylintrc adapters core harvester
+
+Sphinx documentation development:
+    stage: documentation
+    before_script:
+        - apk add make postgresql-libs gcc musl-dev postgresql-dev python3-dev git
+        - pip install -r requirements.txt
+        - pip install sphinx sphinx_rtd_theme sphinx-autodoc-typehints
+    script:
+        - cd docs/
+        - make html
+    artifacts:
+        paths:
+            - _build/html
+        expire_in: 3 day
+    only:
+        - branches
+    except:
+        - master
+
+Sphinx documentation:
+    stage: documentation
+    before_script:
+        - apk add make postgresql-libs gcc musl-dev postgresql-dev python3-dev git
+        - pip install -r requirements.txt
+        - pip install sphinx sphinx_rtd_theme sphinx-autodoc-typehints
+    script:
+        - cd docs/
+        - make html
+    artifacts:
+        paths:
+            - _build/html
+        expire_in: 30 day
+    only:
+        - master
 
 Build docker dev image:
     image: 

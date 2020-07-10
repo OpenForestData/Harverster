@@ -20,7 +20,7 @@ def http_exception_handler(e: HttpException):
 
 class GrafanaClient(HarvestingClient):
 
-    def harvest(self) -> List[Resource]:
+    def harvest(self) -> (List[Resource], list, list):
         """
         Harvests every resource from Grafana and returns is as a list of Resources
 
@@ -29,14 +29,13 @@ class GrafanaClient(HarvestingClient):
 
         return self.get_resources('api/search/', self.__map_dashboard_to_resource)
 
-    def get_resources(self, resource_path: str, resource_map_function) -> (List[Resource],
-                                                                           list,
-                                                                           list):
+    def get_resources(self, resource_path: str, resource_map_function) -> (List[Resource], list, list):
         """
         Fetch data from Grafana API endpoint, maps it to Resource and returns it as a list of add/update/remove
         Resources
 
         :param resource_path: url relative path to API endpoint
+        :type resource_path: str
         :param resource_map_function: function mapping data type retrieved from endpoint to Resource object
         :return: list of fetched data as Resources list
         """
@@ -71,6 +70,7 @@ class GrafanaClient(HarvestingClient):
         Filter only new Resources in list of raw data from source
 
         :param resources: fetched data from source with resources raw data
+        :type resources: list
         :param resource_map_function: mapping function for resource
         :param category: category of resource for mapping
         :return: list of mapped resources
@@ -95,6 +95,7 @@ class GrafanaClient(HarvestingClient):
         Filter Resources deleted in source
 
         :param resources: fetched data from source with resources raw data
+        :type resources: list
         :return: list of resources to delete
         """
         resources_uid: List[str] = [resource['search']['uid'] for resource in resources]
@@ -111,6 +112,7 @@ class GrafanaClient(HarvestingClient):
         Fetch detailed data from Grafana API dashboard route
 
         :param resources: list of harvested data from Grafana search route
+        :type resources: list
         :return: list of harvested data from Grafana with detailed data
         """
         headers: dict = {
@@ -145,8 +147,11 @@ class GrafanaClient(HarvestingClient):
     def __get_request(self, path: str, params: dict) -> list:
         """
         Constructs GET request form given arguments, and loads json response as dict
+
         :param path: relative url path
+        :type path: list
         :param params: GET request parameters
+        :type params: dict
         :return: response json as dict
         """
         headers: dict = {
@@ -164,7 +169,11 @@ class GrafanaClient(HarvestingClient):
     def __map_dashboard_to_resource(self, dashboard: dict, create_file: bool = True) -> Resource:
         """
         Maps dashboard to Resource object
+
         :param dashboard: dict to map to Resource
+        :type dashboard: dict
+        :param create_file: define create file or not
+        :type create_file: bool
         :return: Resource representing layer
         """
         uid: str = dashboard['search']['uid']
@@ -214,6 +223,7 @@ class GrafanaClient(HarvestingClient):
         Create alternative url for Resource and return in full form
 
         :param obj: detail url data of resource
+        :type obj: str
         :return: alternative url of resource
         """
         service_url: str = self.service_url if self.service_url[-1] == '/' else self.service_url[:-1]
@@ -221,11 +231,12 @@ class GrafanaClient(HarvestingClient):
 
         return service_url + detail_url
 
-    def __base_mapping(self, obj) -> dict:
+    def __base_mapping(self, obj: dict) -> dict:
         """
         Map raw data to compatible format for dataverse Resource
 
         :param obj: resource raw data to map
+        :type obj: dict
         :return: mapped resource
         """
         # TODO: Fix keyword mapping
@@ -238,7 +249,6 @@ class GrafanaClient(HarvestingClient):
             'datasetContact': [{'datasetContactEmail': obj['meta']['createdBy'] + '@test.com',
                                 'datasetContactName': obj['meta']['createdBy']}],
             'subject': ['Earth and Environmental Sciences'],
-            # 'keyword': obj['search']['tags'],
             'dsDescription': [{'dsDescriptionValue': ''}],
             'depositor': obj['meta']['createdBy'],
             'dateOfDeposit': obj['meta']['created'],

@@ -21,7 +21,7 @@ def http_exception_handler(e: HttpException):
 
 class OrthancClient(HarvestingClient):
 
-    def harvest(self) -> List[Resource]:
+    def harvest(self) -> (List[Resource], List[Resource], list):
         """
         Harvests every resource from Orthanc and returns is as a list of Resources
 
@@ -30,21 +30,22 @@ class OrthancClient(HarvestingClient):
 
         return self.get_resources('studies/', self.__map_study_to_resource)
 
-    def get_resources(self, resource_path, resource_map_function) -> (list, list, list):
+    def get_resources(self, resource_path: str, resource_map_function) -> (List[Resource], List[Resource], list):
         """
         Fetch data from Orthanc API endpoint, maps it to Resource and returns it as a list of Resources
 
         :param resource_path: url relative path to API endpoint
+        :type resource_path: str
         :param resource_map_function: function mapping data type retrieved from endpoint to Resource object
         :return: list of fetched data as Resources list
         """
         try:
-            results: dict = self.__get_request(resource_path, {})
+            results: list = self.__get_request(resource_path, {})
         except HttpException as e:
             http_exception_handler(e)
             return []
 
-        resources: dict = results
+        resources: list = results
         resources: list = self.__get_detailed_data(resources)
 
         add_resources: List[Resource] = self.__filter_new_resources(resources, resource_map_function,
@@ -54,11 +55,12 @@ class OrthancClient(HarvestingClient):
 
         return add_resources, update_resources, delete_resources
 
-    def __get_detailed_data(self, resources: dict) -> list:
+    def __get_detailed_data(self, resources: list) -> list:
         """
         Fetch detailed data from Orthanc API dashboard route
 
         :param resources: list of harvested data from Orthanc search route
+        :type resources: list
         :return: list of harvested data from Orthanc with detailed data
         """
         detailed_resources: list = []
@@ -72,11 +74,12 @@ class OrthancClient(HarvestingClient):
         return detailed_resources
 
     @staticmethod
-    def __filter_new_resources(resources: list, resource_map_function, category) -> list:
+    def __filter_new_resources(resources: list, resource_map_function, category) -> List[Resource]:
         """
         Filter only new Resources in list of raw data from source
 
         :param resources: fetched data from source with resources raw data
+        :type resources: list
         :param resource_map_function: mapping function for resource
         :param category: category of resource for mapping
         :return: list of mapped resources
@@ -96,11 +99,12 @@ class OrthancClient(HarvestingClient):
         return [resource_map_function(resource) for resource in add_resources]
 
     @staticmethod
-    def __filter_update_resources(resources, resource_map_function) -> list:
+    def __filter_update_resources(resources: list, resource_map_function) -> List[Resource]:
         """
         Filter only Resources to update in raw data from source
 
         :param resources: fetched data from source with resources raw data
+        :type resources: list
         :param resource_map_function: mapping function for resource
         :return: list of mapped resources
         """
@@ -126,7 +130,7 @@ class OrthancClient(HarvestingClient):
         Filter Resources deleted in source
 
         :param resources: fetched data from source with resources raw data
-        :param category: category of resource for mapping
+        :type resources: list
         :return: list of resources to delete
         """
         resources_uid: List[str] = [resource['ID'] for resource in resources]
@@ -138,12 +142,14 @@ class OrthancClient(HarvestingClient):
 
         return list(delete_resources)
 
-    def __get_request(self, path: str, params: dict) -> dict:
+    def __get_request(self, path: str, params: dict) -> list:
         """
         Constructs GET request form given arguments, and loads json response as dict
 
         :param path: relative url path
+        :type path: str
         :param params: GET request parameters
+        :type params: dict
         :return: response json as dict
         """
         response = requests.get(self.service_url + path, params=params)
@@ -159,6 +165,9 @@ class OrthancClient(HarvestingClient):
         Maps study to Resource object
 
         :param study: dict to map to Resource
+        :type study: dict
+        :param create_file: argument decide to create file for dataset or not
+        :type create_file: bool
         :return: Resource representing study
         """
         uid: str = study['ID']
@@ -207,6 +216,13 @@ class OrthancClient(HarvestingClient):
 
     @staticmethod
     def __email_mapping(obj: str) -> str:
+        """
+        Map email argument if exists or return default value
+
+        :param obj: string to map
+        :type obj: str
+        :return: Mapped string with original email or default value
+        """
         if physician_name := obj:
             return physician_name + '@test.pl'
         else:
@@ -214,6 +230,13 @@ class OrthancClient(HarvestingClient):
 
     @staticmethod
     def __date_mapping(obj: str) -> str:
+        """
+        Map argument date if exists or return default value
+
+        :param obj: string to map
+        :type obj: str
+        :return: Mapped string with mapped data to specific format or default value
+        """
         if date_value := obj.strip():
             return datetime.strptime(date_value, '%Y%m%d').strftime('%Y-%m-%d')
         else:
@@ -221,6 +244,13 @@ class OrthancClient(HarvestingClient):
 
     @staticmethod
     def __unknown_value_mapping(obj: str, return_value: any = 'Unknown') -> str:
+        """
+        Map argument if exists or return default value
+
+        :param obj: string to map
+        :type obj: str
+        :return: Mapped string with original value or default value
+        """
         if unknown_value := obj.strip():
             return unknown_value
         else:
@@ -231,6 +261,7 @@ class OrthancClient(HarvestingClient):
         Create alternative url for Resource and return in full form
 
         :param obj: detail url data of resource
+        :type obj: str
         :return: alternative url of resource
         """
         service_url: str = self.service_url if self.service_url[-1] == '/' else self.service_url[:-1]
@@ -238,11 +269,12 @@ class OrthancClient(HarvestingClient):
 
         return service_url + detail_url
 
-    def __base_mapping(self, obj) -> dict:
+    def __base_mapping(self, obj: dict) -> dict:
         """
         Map raw data to compatible format for dataverse Resource
 
         :param obj: resource raw data to map
+        :type obj: dict
         :return: mapped resource
         """
         return {

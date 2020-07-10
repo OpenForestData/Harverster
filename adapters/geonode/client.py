@@ -26,7 +26,7 @@ class GeonodeClient(HarvestingClient):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-    def harvest(self):
+    def harvest(self) -> (List[Resource], List[Resource], list):
         """
         Harvests every resource from Geonode and returns as a list of add/update/remove Resources
 
@@ -42,14 +42,15 @@ class GeonodeClient(HarvestingClient):
 
         return add_data, update_data, remove_data
 
-    def get_resources(self, resource_path, resource_map_function, resource_mapping_category) -> (List[Resource],
-                                                                                                 List[Resource],
-                                                                                                 list):
+    def get_resources(self, resource_path: str, resource_map_function, resource_mapping_category) -> (List[Resource],
+                                                                                                      List[Resource],
+                                                                                                      list):
         """
         Fetch data from Geonode API endpoint, maps it to Resource and returns it as a list of Resources to add, update
         and remove
 
         :param resource_path: url relative path to API endpoint
+        :type resource_path: str
         :param resource_map_function: function mapping data type retrieved from endpoint to Resource object
         :param resource_mapping_category: category of mapping showed in ResourceMapping category field
         :return: list of add/update/remove fetched data as Resources lists
@@ -63,7 +64,7 @@ class GeonodeClient(HarvestingClient):
             results: dict = self.__get_request(resource_path, params)
         except HttpException as e:
             http_exception_handler(e)
-            return []
+            return [], [], []
 
         resources: list = results['objects']
 
@@ -83,6 +84,7 @@ class GeonodeClient(HarvestingClient):
         Filter only new Resources in list of raw data from source
 
         :param resources: fetched data from source with resources raw data
+        :type resources: list
         :param resource_map_function: mapping function for resource
         :param category: category of resource for mapping
         :return: list of mapped resources
@@ -132,6 +134,7 @@ class GeonodeClient(HarvestingClient):
         Filter Resources deleted in source
 
         :param resources: fetched data from source with resources raw data
+        :type resources: list
         :param category: category of resource for mapping
         :return: list of resources to delete
         """
@@ -158,8 +161,11 @@ class GeonodeClient(HarvestingClient):
         Constructs GET request form given arguments, and loads json response as dict
 
         :param path: relative url path
+        :type path: str
         :param params: GET request parameters
+        :type params: dict
         :param headers: request headers
+        :type headers: dict
         :return: response json as dict
         """
         # TODO: Remove verify argument
@@ -176,6 +182,9 @@ class GeonodeClient(HarvestingClient):
         Maps layer to Resource object
 
         :param layer: dict to map to Resource
+        :type layer: dict
+        :param create_file: define create file or not
+        :type create_file: bool
         :return: Resource representing layer
         """
         uuid: str = layer['uuid']
@@ -200,6 +209,9 @@ class GeonodeClient(HarvestingClient):
         Maps geonode map to Resource object
 
         :param geomap: dict to map to Resource
+        :type geomap: dict
+        :param create_file: define create file or not
+        :type create_file: bool
         :return: Resource representing geonode map
         """
         uuid: str = geomap['uuid']
@@ -253,6 +265,9 @@ class GeonodeClient(HarvestingClient):
         Maps document to Resource object
 
         :param document: dict to map to Resource
+        :type document: dict
+        :param create_file: define create file or not
+        :type create_file: bool
         :return: Resource representing document
         """
         uuid: str = document['uuid']
@@ -276,6 +291,7 @@ class GeonodeClient(HarvestingClient):
         Create alternative url for Resource and return in full form
 
         :param obj: detail url data of resource
+        :type obj: str
         :return: alternative url of resource
         """
         service_url: str = self.service_url if self.service_url[-1] == '/' else self.service_url[:-1]
@@ -288,6 +304,7 @@ class GeonodeClient(HarvestingClient):
         Map raw data to compatible format for dataverse Resource
 
         :param obj: resource raw data to map
+        :type obj: dict
         :return: mapped resource
         """
         return {
@@ -307,6 +324,7 @@ class GeonodeClient(HarvestingClient):
         Map geographic data to dataverse compatible format
 
         :param obj: box mapping raw data
+        :type obj: dict
         :return: mapped geographicBoundingBox
         """
         return {
