@@ -67,7 +67,6 @@ enable =blacklisted-name,
         super-on-old-class,
         bad-super-call,
         missing-super-argument,
-        no-member,
         not-callable,
         assignment-from-no-return,
         no-value-for-parameter,
@@ -306,6 +305,7 @@ disable=misplaced-comparison-constant,
         abstract-method,
         logging-fstring-interpolation,
         missing-module-docstring,
+        no-member,
 
 
 [REPORTS]
