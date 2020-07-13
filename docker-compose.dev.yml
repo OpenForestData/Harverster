@@ -93,7 +93,7 @@ services:
     volumes: []
     container_name: "harvester_celery"
     labels: []
-    command: 'bash -c "/app/docker/entrypoint-celery.sh"'
+    command: 'sh -c "/app/docker/entrypoint-celery.sh"'
 
   harvester_flower:
     container_name: "harvester_flower"
