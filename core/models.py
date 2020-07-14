@@ -36,13 +36,11 @@ class Resource:
         """
         is_valid = True
 
-        if self.datafile is not None:
-            if not self.datafile.is_valid():
-                is_valid = False
+        if self.datafile is not None and not self.datafile.is_valid():
+            is_valid = False
 
-        if self.dataset is not None:
-            if not self.dataset.is_valid():
-                is_valid = False
+        if self.dataset is not None and not self.dataset.is_valid():
+            is_valid = False
 
         return is_valid
 
