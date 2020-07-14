@@ -6,19 +6,16 @@ class Resource:
     """
     Represents resource imported form harvested systems
     """
+    dataset: Dataset = Dataset()
 
     def __init__(
             self,
             parent_dataverse: str,
-            dataset: Dataset = None,
             datafile: Datafile = None,
             uid: str = None,
             pid: str = None
     ):
         self.parent_dataverse = parent_dataverse
-        if not dataset:
-            dataset = Dataset()
-        self.dataset = dataset
         self.datafile = datafile
         self.uid = uid
         self.pid = pid
