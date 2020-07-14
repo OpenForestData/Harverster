@@ -15,11 +15,14 @@ from core.models import Resource, ResourceMapping
 logger = logging.getLogger(__name__)
 
 
-def http_exception_handler(e: HttpException):
-    logger.exception(e)
+def http_exception_handler(exception: HttpException):
+    logger.exception(exception)
 
 
 class OrthancClient(HarvestingClient):
+    """
+    Harvesting Client for harvesting Resources from Orthanc
+    """
 
     def harvest(self) -> (List[Resource], List[Resource], list):
         """
@@ -28,28 +31,30 @@ class OrthancClient(HarvestingClient):
         :return: list of harvested data from Orthanc
         """
 
-        return self.get_resources('studies/', self.__map_study_to_resource)
+        return self.get_resources('studies/', self.__map_study_to_resource, ResourceMapping.STUDY)
 
-    def get_resources(self, resource_path: str, resource_map_function) -> (List[Resource], List[Resource], list):
+    def get_resources(self, resource_path: str, resource_map_function, resource_mapping_category) -> (
+            List[Resource], List[Resource], list):
         """
         Fetch data from Orthanc API endpoint, maps it to Resource and returns it as a list of Resources
 
         :param resource_path: url relative path to API endpoint
         :type resource_path: str
         :param resource_map_function: function mapping data type retrieved from endpoint to Resource object
+        :param resource_mapping_category: category of mapping showed in ResourceMapping category field
         :return: list of fetched data as Resources list
         """
         try:
             results: list = self.__get_request(resource_path, {})
-        except HttpException as e:
-            http_exception_handler(e)
+        except HttpException as exception:
+            http_exception_handler(exception)
             return []
 
         resources: list = results
         resources: list = self.__get_detailed_data(resources)
 
         add_resources: List[Resource] = self.__filter_new_resources(resources, resource_map_function,
-                                                                    ResourceMapping.STUDY)
+                                                                    resource_mapping_category)
         update_resources: List[Resource] = self.__filter_update_resources(resources, resource_map_function)
         delete_resources: list = self.__filter_remove_resources(resources)
 
@@ -66,7 +71,7 @@ class OrthancClient(HarvestingClient):
         detailed_resources: list = []
 
         for resource in resources:
-            response = requests.get(self.service_url + 'studies/' + resource)
+            response = requests.get(self.service_url + 'studies/' + resource, timeout=10)
             response_json = json.loads(response.text)
 
             detailed_resources.append(response_json)
@@ -119,7 +124,6 @@ class OrthancClient(HarvestingClient):
 
             if resource_mapping is not None and (
                     resource_mapping.last_update.replace(tzinfo=None) < date):
-
                 update_resources.append(resource)
 
         return [resource_map_function(resource, create_file=False) for resource in update_resources]
@@ -152,7 +156,7 @@ class OrthancClient(HarvestingClient):
         :type params: dict
         :return: response json as dict
         """
-        response = requests.get(self.service_url + path, params=params)
+        response = requests.get(self.service_url + path, params=params, timeout=10)
 
         if response.status_code == requests.codes.ok:
             return json.loads(response.text)
@@ -225,8 +229,8 @@ class OrthancClient(HarvestingClient):
         """
         if physician_name := obj:
             return physician_name + '@test.pl'
-        else:
-            return 'unknown@test.pl'
+
+        return 'unknown@test.pl'
 
     @staticmethod
     def __date_mapping(obj: str) -> str:
@@ -239,8 +243,8 @@ class OrthancClient(HarvestingClient):
         """
         if date_value := obj.strip():
             return datetime.strptime(date_value, '%Y%m%d').strftime('%Y-%m-%d')
-        else:
-            return datetime.now().strftime('%Y-%m-%d')
+
+        return datetime.now().strftime('%Y-%m-%d')
 
     @staticmethod
     def __unknown_value_mapping(obj: str, return_value: any = 'Unknown') -> str:
@@ -253,8 +257,8 @@ class OrthancClient(HarvestingClient):
         """
         if unknown_value := obj.strip():
             return unknown_value
-        else:
-            return return_value
+
+        return return_value
 
     def __create_alternative_url(self, obj: str) -> str:
         """
