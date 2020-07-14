@@ -5,7 +5,6 @@ from pyDataverse.models import Dataset, Datafile
 class Resource:
     """
     Represents resource imported form harvested systems
-
     """
 
     def __init__(

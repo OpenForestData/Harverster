@@ -16,11 +16,15 @@ from core.models import Resource, ResourceMapping
 logger = logging.getLogger(__name__)
 
 
-def http_exception_handler(e: HttpException):
-    logger.exception(e)
+def http_exception_handler(exception: HttpException):
+    logger.exception(exception)
 
 
 class GeonodeClient(HarvestingClient):
+    """
+    Harvesting Client for harvesting Resources from Geonode
+    """
+
     offset = settings.GEONODE_OFFSET
 
     def __init__(self, *args, **kwargs):
@@ -62,8 +66,8 @@ class GeonodeClient(HarvestingClient):
 
         try:
             results: dict = self.__get_request(resource_path, params)
-        except HttpException as e:
-            http_exception_handler(e)
+        except HttpException as exception:
+            http_exception_handler(exception)
             return [], [], []
 
         resources: list = results['objects']
@@ -149,6 +153,17 @@ class GeonodeClient(HarvestingClient):
         return list(delete_resources)
 
     def __get_next_page(self, path: str, limit: int, offset: int):
+        """
+        Sends get_request for next page
+
+        :param path: relative url path
+        :type path: str
+        :param limit:  request list limit
+        :type limit: int
+        :param offset: request list offset
+        :type offset: int
+        :return: __get_request function with params for next page
+        """
         params: dict = {
             'limit': limit,
             'offset': offset + limit
@@ -169,7 +184,7 @@ class GeonodeClient(HarvestingClient):
         :return: response json as dict
         """
         # TODO: Remove verify argument
-        response = requests.get(self.service_url + path, params=params, headers=headers, verify=False)
+        response = requests.get(self.service_url + path, params=params, headers=headers, verify=False, timeout=10)
 
         if response.status_code != requests.codes.ok:
             msg = f'GET {self.service_url + path} with params {params} returned: {response.status_code} {response.text}'

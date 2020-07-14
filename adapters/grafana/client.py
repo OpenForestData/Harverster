@@ -14,11 +14,14 @@ from core.models import Resource, ResourceMapping
 logger = logging.getLogger(__name__)
 
 
-def http_exception_handler(e: HttpException):
-    logger.exception(e)
+def http_exception_handler(exception: HttpException):
+    logger.exception(exception)
 
 
 class GrafanaClient(HarvestingClient):
+    """
+    Harvesting Client for harvesting Resources from Grafana
+    """
 
     def harvest(self) -> (List[Resource], list, list):
         """
@@ -27,9 +30,10 @@ class GrafanaClient(HarvestingClient):
         :return: list of harvested data from Grafana
         """
 
-        return self.get_resources('api/search/', self.__map_dashboard_to_resource)
+        return self.get_resources('api/search/', self.__map_dashboard_to_resource, ResourceMapping.DASHBOARD)
 
-    def get_resources(self, resource_path: str, resource_map_function) -> (List[Resource], list, list):
+    def get_resources(self, resource_path: str, resource_map_function, resource_mapping_category) -> (
+                                                                                    List[Resource], list, list):
         """
         Fetch data from Grafana API endpoint, maps it to Resource and returns it as a list of add/update/remove
         Resources
@@ -37,6 +41,7 @@ class GrafanaClient(HarvestingClient):
         :param resource_path: url relative path to API endpoint
         :type resource_path: str
         :param resource_map_function: function mapping data type retrieved from endpoint to Resource object
+        :param resource_mapping_category: category of mapping showed in ResourceMapping category field
         :return: list of fetched data as Resources list
         """
         params: dict = {
@@ -45,8 +50,8 @@ class GrafanaClient(HarvestingClient):
 
         try:
             results: list = self.__get_request(resource_path, params)
-        except HttpException as e:
-            http_exception_handler(e)
+        except HttpException as exception:
+            http_exception_handler(exception)
             return []
 
         resources: list = results
@@ -59,7 +64,7 @@ class GrafanaClient(HarvestingClient):
         # Get detailed resource data
         resources: list = self.__get_detailed_data(resources)
         add_resources: List[Resource] = self.__filter_new_resources(resources, resource_map_function,
-                                                                    ResourceMapping.DASHBOARD)
+                                                                    resource_mapping_category)
         delete_resources: list = self.__filter_remove_resources(resources)
 
         return add_resources, [], delete_resources
@@ -123,7 +128,7 @@ class GrafanaClient(HarvestingClient):
 
         for resource in resources:
             uid: str = resource['uid']
-            response = requests.get(self.service_url + 'api/dashboards/uid/' + uid, headers=headers)
+            response = requests.get(self.service_url + 'api/dashboards/uid/' + uid, headers=headers, timeout=10)
             response_json = json.loads(response.text)
 
             res: dict = {
@@ -158,7 +163,7 @@ class GrafanaClient(HarvestingClient):
             'Authorization': f'Bearer {self.api_key}'
         }
 
-        response = requests.get(self.service_url + path, params=params, headers=headers)
+        response = requests.get(self.service_url + path, params=params, headers=headers, timeout=10)
 
         if response.status_code == requests.codes.ok:
             return json.loads(response.text)
