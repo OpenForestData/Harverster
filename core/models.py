@@ -20,6 +20,32 @@ class Resource:
         self.uid = uid
         self.pid = pid
 
+    def is_pid(self):
+        """
+        Check if value exists and return True or False value
+
+        :return: True if pid is not None
+        """
+        return self.pid is not None
+
+    def is_valid(self):
+        """
+        Check if dataset and datafile is valid
+
+        :return: True if value is correct
+        """
+        is_valid = True
+
+        if self.datafile is not None:
+            if not self.datafile.is_valid():
+                is_valid = False
+
+        if self.dataset is not None:
+            if not self.dataset.is_valid():
+                is_valid = False
+
+        return is_valid
+
 
 class ResourceMapping(models.Model):
     """
