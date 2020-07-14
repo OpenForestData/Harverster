@@ -34,7 +34,7 @@ class OrthancClient(HarvestingClient):
         return self.get_resources('studies/', self.__map_study_to_resource, ResourceMapping.STUDY)
 
     def get_resources(self, resource_path: str, resource_map_function, resource_mapping_category) -> (
-                                                                            List[Resource], List[Resource], list):
+            List[Resource], List[Resource], list):
         """
         Fetch data from Orthanc API endpoint, maps it to Resource and returns it as a list of Resources
 

@@ -33,7 +33,7 @@ class GrafanaClient(HarvestingClient):
         return self.get_resources('api/search/', self.__map_dashboard_to_resource, ResourceMapping.DASHBOARD)
 
     def get_resources(self, resource_path: str, resource_map_function, resource_mapping_category) -> (
-                                                                                    List[Resource], list, list):
+            List[Resource], list, list):
         """
         Fetch data from Grafana API endpoint, maps it to Resource and returns it as a list of add/update/remove
         Resources
@@ -142,6 +142,17 @@ class GrafanaClient(HarvestingClient):
         return detailed_resources
 
     def __get_next_page(self, path: str, page: int, limit: int) -> list:
+        """
+        Sends get_request for next page
+
+        :param path: relative url path
+        :type path: str
+        :param page: request list page
+        :type page: int
+        :param limit: request list limit
+        :type limit: int
+        :return: __get_request function with params for next page
+        """
         params: dict = {
             'limit': limit,
             'page': page
