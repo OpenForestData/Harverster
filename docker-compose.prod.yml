@@ -25,9 +25,9 @@ services:
     ports:
         - 80:80
         - 443:443
-    volumes:
+    volumes: 
         - "/var/run/docker.sock:/var/run/docker.sock:ro"
-    networks:
+    networks: 
         - harvester_network
 
   harvester_db:
@@ -37,8 +37,8 @@ services:
     volumes:
       - harvester_db:/var/lib/postgresql
     environment:
-      - POSTGRES_USER=harvester_user
-      - POSTGRES_PASSWORD=harvester_passowrd
+      - POSTGRES_USER=harvesteruser
+      - POSTGRES_PASSWORD=ctwB28e
       - POSTGRES_DB=harvester
     networks:
       - harvester_network
@@ -47,7 +47,7 @@ services:
     container_name: "harvester_redis"
     image: "redis:6-alpine"
     restart: unless-stopped
-    networks:
+    networks: 
       - harvester_network
 
   harvester_backend: &harvester_backend
@@ -57,14 +57,14 @@ services:
     volumes:
       - admin_statics:/usr/local/lib/python3.8/site-packages/django/contrib/admin/static/
     environment:
-      - DEBUG=False
+      - DEBUG=True
       - SECRET_KEY=SECRET_KEY_REPLACE
       - DB_HOST=harvester_db
-      - DB_USER=harvester_user
-      - DB_PASSWORD=harvester_passowrd
+      - DB_USER=harvesteruser
+      - DB_PASSWORD=ctwB28e
       - CELERY_BROKER_URL=redis://harvester_redis:6379/0
-      - DATAVERSE_URL=https://test.dataverse.com
-      - DATAVERSE_API_KEY=DATAVERSE_API_KEY_REPLACE
+      - DATAVERSE_URL=https://dataverse.whiteaster.com
+      - DATAVERSE_API_KEY=9c9d2213-482d-405d-9490-96b984b96898
       - LAYERS_PARENT_DATAVERSE=layers
       - MAPS_PARENT_DATAVERSE=maps
       - DOCUMENTS_PARENT_DATAVERSE=documents
@@ -72,7 +72,7 @@ services:
       - STUDIES_PARENT_DATAVERSE=studies
     labels:
       - traefik.enable=true
-      - traefik.http.routers.harvester_backend.rule=Host(`${URL}`)
+      - traefik.http.routers.harvester_backend.rule=Host(`${URL}`) && PathPrefix (`/admin`)
       - traefik.http.services.harvester_backend.loadbalancer.server.port=8000
       - traefik.http.routers.harvester_backend.entrypoints=web-secure
       - traefik.http.middlewares.harvester_backend.headers.accesscontrolallowmethods=GET,OPTIONS,PUT,POST,DELETE,PATCH
@@ -86,12 +86,59 @@ services:
 
   harvester_celery:
     <<: *harvester_backend
-    image: "harvester_celery"
+    image: "registry.gitlab.whiteaster.com/openforestdata/backend/harverster:latest"
+    volumes: []
     container_name: "harvester_celery"
     labels: []
-    command: 'bash -c "/app/docker/entrypoint-celery.sh"'
+    command: 'sh -c "/app/docker/entrypoint-celery.sh"'
 
-# volumes definiton
+  harvester_flower:
+    container_name: "harvester_flower"
+    image: "mher/flower"
+    restart: unless-stopped
+    volumes:
+      - flower_statics:/usr/local/lib/python3.8/site-packages/flower/static
+    environment:
+      - CELERY_BROKER_URL=redis://harvester_redis:6379/0
+      - FLOWER_PORT=8888
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.harvester_flower.rule=Host(`${URL}`) && PathPrefix (`/dashboard`, `/broker`, `/monitor`, `/tasks`, `/logout`, `/worker`, `/api`, `/task`)
+      - traefik.http.services.harvester_flower.loadbalancer.server.port=8888
+      - traefik.http.routers.harvester_flower.entrypoints=web-secure
+      - traefik.http.middlewares.harvester_flower.headers.accesscontrolallowmethods=GET,OPTIONS,PUT,POST,DELETE,PATCH
+      - traefik.http.middlewares.harvester_flower.headers.accesscontrolalloworigin=origin-list-or-null
+      - traefik.http.middlewares.harvester_flower.headers.accesscontrolmaxage=100
+      - traefik.http.middlewares.harvester_flower.headers.addvaryheader=true
+      - traefik.http.routers.harvester_flower.tls=true
+      - traefik.http.routers.harvester_flower.tls.certresolver=letsencrypt
+    networks:
+      - harvester_network
+
+  harvester_nginx:
+    image: "nginx:1.19-alpine"
+    container_name: "harvester_nginx"
+    restart: unless-stopped
+    volumes:
+      - ./docker/default.conf:/etc/nginx/conf.d/default.conf
+      - flower_statics:/flower_statics
+      - admin_statics:/admin_statics
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.harvester_nginx.rule=Host(`${URL}`)
+      - traefik.http.services.harvester_nginx.loadbalancer.server.port=80
+      - traefik.http.routers.harvester_nginx.entrypoints=web-secure
+      - traefik.http.middlewares.harvester_nginx.headers.accesscontrolallowmethods=GET,OPTIONS,PUT,POST,DELETE,PATCH
+      - traefik.http.middlewares.harvester_nginx.headers.accesscontrolalloworigin=origin-list-or-null
+      - traefik.http.middlewares.harvester_nginx.headers.accesscontrolmaxage=100
+      - traefik.http.middlewares.harvester_nginx.headers.addvaryheader=true
+      - traefik.http.routers.harvester_nginx.tls=true
+      - traefik.http.routers.harvester_nginx.tls.certresolver=letsencrypt
+    networks:
+      - harvester_network
+
+
+  # volumes definiton
 volumes:
   harvester_db:
   redis_data:

@@ -93,7 +93,7 @@ services:
     volumes: []
     container_name: "harvester_celery"
     labels: []
-    command: 'bash -c "/app/docker/entrypoint-celery.sh"'
+    command: 'sh -c "/app/docker/entrypoint-celery.sh"'
 
   harvester_flower:
     container_name: "harvester_flower"
@@ -106,7 +106,7 @@ services:
       - FLOWER_PORT=8888
     labels:
       - traefik.enable=true
-      - traefik.http.routers.harvester_flower.rule=Host(`${URL}`) && PathPrefix (`/dashboard`, `/broker`, `/monitor`, `/tasks`, `/logout`, `/worker`, `/api`)
+      - traefik.http.routers.harvester_flower.rule=Host(`${URL}`) && PathPrefix (`/dashboard`, `/broker`, `/monitor`, `/tasks`, `/logout`, `/worker`, `/api`, `/task`)
       - traefik.http.services.harvester_flower.loadbalancer.server.port=8888
       - traefik.http.routers.harvester_flower.entrypoints=web-secure
       - traefik.http.middlewares.harvester_flower.headers.accesscontrolallowmethods=GET,OPTIONS,PUT,POST,DELETE,PATCH

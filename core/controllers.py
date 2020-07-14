@@ -14,6 +14,9 @@ logger = logging.getLogger(__name__)
 
 
 class HarvestingController:
+    """
+    Class for harvesting source Resources to dataverse using specified adapters
+    """
 
     def __init__(self, harvesting_client: HarvestingClient, dataverse_client: Api):
         self.harvesting_client = harvesting_client

@@ -1,4 +1,5 @@
 image: python:3.8-alpine
+
 variables:
     DEBUG: "False"
     SECRET_KEY: "SECRET_KEY_REPLACE"
@@ -62,6 +63,8 @@ Sphinx documentation development:
         - branches
     except:
         - master
+    needs:
+        - Flake8
 
 Sphinx documentation:
     stage: documentation
@@ -78,6 +81,8 @@ Sphinx documentation:
         expire_in: 30 day
     only:
         - master
+    needs:
+        - Flake8
 
 Build docker dev image:
     image: 

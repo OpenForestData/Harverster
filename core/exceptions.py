@@ -1,2 +1,2 @@
-class HttpException(BaseException):
+class HttpException(Exception):
     pass
