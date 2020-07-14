@@ -14,7 +14,7 @@ RUN  pip install -r requirements.txt
 ADD . /app
 
 RUN chmod +x /app/docker/entrypoint.sh
-RUN chmod +x /app/docker/wait_for.sh
+RUN chmod +x /app/docker/wait-for
 RUN chmod -R 755 /app
 
 CMD /bin/sh -c '/app/docker/wait-for harvester_db:5432 -t 20 -- /bin/sh /app/docker/entrypoint.sh'
