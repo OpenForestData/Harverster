@@ -19,6 +19,7 @@ stages:
     - sonarqube
     - code checks
     - documentation
+    - tests
     - build
 
 sonarqube:
@@ -81,6 +82,16 @@ Sphinx documentation:
         expire_in: 30 day
     only:
         - master
+    needs:
+        - Flake8
+
+Test:
+    stage: tests
+    script:
+        - pip install -r requirements.txt
+        - pip install factory-boy pytest pytest-cov pytest-pythonpath
+        - pytest -v --cov-report term-missing --cov
+    coverage: /^TOTAL.*\s+(\d+\%)$/
     needs:
         - Flake8
 
