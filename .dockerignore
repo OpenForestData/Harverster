@@ -6,3 +6,4 @@ docker-compose.yml
 .vscode
 mypy.ini
 venv
+db.sqlite3
