@@ -90,7 +90,7 @@ Test:
     script:
         - apk add make postgresql-libs gcc musl-dev postgresql-dev python3-dev git
         - pip install -r requirements.txt
-        - pip install factory-boy pytest pytest-cov pytest-pythonpath
+        - pip install factory-boy pytest pytest-cov pytest-pythonpath pytest-django
         - pytest -v --cov-report term-missing --cov
     coverage: /^TOTAL.*\s+(\d+\%)$/
     needs:
