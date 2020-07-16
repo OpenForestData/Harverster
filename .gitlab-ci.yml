@@ -88,6 +88,7 @@ Sphinx documentation:
 Test:
     stage: tests
     script:
+        - apk add make postgresql-libs gcc musl-dev postgresql-dev python3-dev git
         - pip install -r requirements.txt
         - pip install factory-boy pytest pytest-cov pytest-pythonpath
         - pytest -v --cov-report term-missing --cov
