@@ -62,6 +62,8 @@ services:
     environment:
       - DEBUG=True
       - SECRET_KEY=SECRET_KEY_REPLACE
+      - DB_ENGINE=django.db.backends.postgresql_psycopg2
+      - DB_NAME=harvester
       - DB_HOST=harvester_db
       - DB_USER=harvesteruser
       - DB_PASSWORD=ctwB28e

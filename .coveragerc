@@ -1,0 +1,13 @@
+[run]
+branch = true
+omit =
+    */tests/*
+    */venv/*
+    *__init__.py*
+    */migrations/*
+    *manage.py*
+    *wsgi.py*
+    *urls.py*
+    */usr/lib/python3/*
+    */dist-packages/*
+    */.virtualenvs/*

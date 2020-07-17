@@ -16,19 +16,11 @@ variables:
     STUDIES_PARENT_DATAVERSE: "studies"
 
 stages:
-    - sonarqube
     - code checks
     - documentation
+    - tests
+    - sonarqube
     - build
-
-sonarqube:
-    image: sonarsource/sonar-scanner-cli
-    stage: sonarqube
-    before_script: []
-    script:
-        - sonar-scanner -Dsonar.projectKey=Harvester -Dsonar.sources=. -Dsonar.host.url=https://sonarqube.whiteaster.com -Dsonar.login=e126c39bede52b892bfb1167951b54576a6690ca
-    only:
-        - master
 
 Flake8:
     stage: code checks
@@ -83,6 +75,34 @@ Sphinx documentation:
         - master
     needs:
         - Flake8
+
+test:
+    stage: tests
+    script:
+        - apk add make postgresql-libs gcc musl-dev postgresql-dev python3-dev git
+        - pip install -r requirements.txt
+        - pip install factory-boy pytest pytest-cov pytest-pythonpath pytest-django
+        - pytest -v --cov-report term-missing --cov-report xml:cov.xml --cov
+    coverage: /^TOTAL.*\s+(\d+\%)$/
+    artifacts:
+        paths:
+            - cov.xml
+        expire_in: 1h
+    needs:
+        - Flake8
+
+sonarqube:
+    image: sonarsource/sonar-scanner-cli
+    stage: sonarqube
+    before_script: []
+    script:
+        - sonar-scanner -Dsonar.projectKey=Harvester -Dsonar.sources=. -Dsonar.host.url=https://sonarqube.whiteaster.com -Dsonar.login=e126c39bede52b892bfb1167951b54576a6690ca
+    dependencies: 
+        - test
+    only:
+        - master
+    needs:
+        - test
 
 Build docker dev image:
     image: 
