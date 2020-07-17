@@ -12,10 +12,6 @@ https://docs.djangoproject.com/en/2.2/ref/settings/
 import os
 from ast import literal_eval
 
-if os.environ.get('READ_DOT_ENV'):
-    from dotenv import load_dotenv
-    load_dotenv(dotenv_path='../')
-
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -23,7 +19,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # See https://docs.djangoproject.com/en/2.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get('SECRET_KEY')
+SECRET_KEY = os.environ.get('SECRET_KEY', 'SECRET_KEY_TEST')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = literal_eval(os.environ.get('DEBUG', 'True'))
@@ -84,11 +80,11 @@ WSGI_APPLICATION = 'harvester.wsgi.application'
 # Database Configuration
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': os.environ.get("DB_NAME"),
-        'USER': os.environ.get("DB_USER"),
-        'PASSWORD': os.environ.get("DB_PASSWORD", 5432),
-        'HOST': os.environ.get("DB_HOST"),
+        'ENGINE': os.environ.get("DB_ENGINE", "django.db.backends.sqlite3"),
+        'NAME': os.environ.get("DB_NAME", os.path.join(BASE_DIR, "db.sqlite3")),
+        'USER': os.environ.get("DB_USER", "harvester_user"),
+        'PASSWORD': os.environ.get("DB_PASSWORD", "harvester_password"),
+        'HOST': os.environ.get("DB_HOST", "localhost"),
         'PORT': '5432',
     },
 }
@@ -132,11 +128,11 @@ STATIC_URL = '/static-backend/'
 # Celery
 CELERY_RESULT_BACKEND = 'django-db'
 CELERY_TASK_EAGER_PROPAGATES = True
-CELERY_BROKER_URL = os.environ.get('CELERY_BROKER_URL')
+CELERY_BROKER_URL = os.environ.get('CELERY_BROKER_URL', 'localhost')
 
 # Dataverse
-DATAVERSE_URL = os.environ.get('DATAVERSE_URL')
-DATAVERSE_API_KEY = os.environ.get('DATAVERSE_API_KEY')
+DATAVERSE_URL = os.environ.get('DATAVERSE_URL', 'localhost')
+DATAVERSE_API_KEY = os.environ.get('DATAVERSE_API_KEY', 'dataverse_api_key')
 
 # Geonode
 GEONODE_OFFSET = os.environ.get('GEONODE_OFFSET', 1000)
