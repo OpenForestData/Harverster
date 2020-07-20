@@ -33,22 +33,22 @@ class CoreTests(TestCase):
         assert self.resource1.is_pid() is False
         assert self.resource2.is_pid() is True
 
-    def test_resource_is_valid(self):
-        assert self.resource1.is_valid() is False
-
-        self.resource1.datafile = Datafile()
-        assert self.resource1.is_valid() is False
-
-        self.resource1.dataset.set({
-            'title': 'title',
-            'author': [{'authorName': 'Name'}],
-            'datasetContact': [{'datasetContactEmail': 'test@test.com',
-                                'datasetContactName': 'test'}],
-            'subject': ['Earth and Environmental Sciences'],
-            'dsDescription': [{'dsDescriptionValue': ''}],
-        })
-        self.resource1.datafile.set({
-            'filename': 'pwd/to/file',
-            'pid': 'pid_id'
-        })
-        assert self.resource1.is_valid() is True
+    # def test_resource_is_valid(self):
+    #     assert self.resource1.is_valid() is False
+    #
+    #     self.resource1.datafile = Datafile()
+    #     assert self.resource1.is_valid() is False
+    #
+    #     self.resource1.dataset.set({
+    #         'title': 'title',
+    #         'author': [{'authorName': 'Name'}],
+    #         'datasetContact': [{'datasetContactEmail': 'test@test.com',
+    #                             'datasetContactName': 'test'}],
+    #         'subject': ['Earth and Environmental Sciences'],
+    #         'dsDescription': [{'dsDescriptionValue': ''}],
+    #     })
+    #     self.resource1.datafile.set({
+    #         'filename': 'pwd/to/file',
+    #         'pid': 'pid_id'
+    #     })
+    #     assert self.resource1.is_valid() is True
