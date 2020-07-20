@@ -1,7 +1,7 @@
 import os
 
-from django.test import TestCase
 import factory
+from django.test import TestCase
 from pyDataverse.models import Datafile
 
 from core.models import ResourceMapping, Resource
@@ -15,10 +15,13 @@ class CoreTests(TestCase):
         cls.resource_mapping1 = ResourceMapping()
         cls.resource_mapping2 = ResourceMapping()
 
-        cls.resource1 = Resource(os.environ.get('DASHBOARDS_PARENT_DATAVERSE'), uid=factory.Faker('uuid4'))
+        cls.resource1 = Resource(
+            os.environ.get('DASHBOARDS_PARENT_DATAVERSE'),
+            uid='uuid'
+        )
         cls.resource2 = Resource(
             os.environ.get('DASHBOARDS_PARENT_DATAVERSE'),
-            uid=factory.Faker('uuid4'),
+            uid='uuid2',
             pid='Nonono'
         )
 
@@ -33,22 +36,22 @@ class CoreTests(TestCase):
         assert self.resource1.is_pid() is False
         assert self.resource2.is_pid() is True
 
-    # def test_resource_is_valid(self):
-    #     assert self.resource1.is_valid() is False
-    #
-    #     self.resource1.datafile = Datafile()
-    #     assert self.resource1.is_valid() is False
-    #
-    #     self.resource1.dataset.set({
-    #         'title': 'title',
-    #         'author': [{'authorName': 'Name'}],
-    #         'datasetContact': [{'datasetContactEmail': 'test@test.com',
-    #                             'datasetContactName': 'test'}],
-    #         'subject': ['Earth and Environmental Sciences'],
-    #         'dsDescription': [{'dsDescriptionValue': ''}],
-    #     })
-    #     self.resource1.datafile.set({
-    #         'filename': 'pwd/to/file',
-    #         'pid': 'pid_id'
-    #     })
-    #     assert self.resource1.is_valid() is True
+    def test_resource_is_valid(self):
+        assert self.resource1.is_valid() is False
+
+        self.resource1.datafile = Datafile()
+        assert self.resource1.is_valid() is False
+
+        self.resource1.dataset.set({
+            'title': 'title',
+            'author': [{'authorName': 'Name'}],
+            'datasetContact': [{'datasetContactEmail': 'test@test.com',
+                                'datasetContactName': 'test'}],
+            'subject': ['Earth and Environmental Sciences'],
+            'dsDescription': [{'dsDescriptionValue': ''}],
+        })
+        self.resource1.datafile.set({
+            'filename': 'pwd/to/file',
+            'pid': 'pid_id'
+        })
+        assert self.resource1.is_valid() is True
