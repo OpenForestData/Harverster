@@ -76,7 +76,7 @@ Sphinx documentation:
     needs:
         - Flake8
 
-Test:
+test:
     stage: tests
     script:
         - apk add make postgresql-libs gcc musl-dev postgresql-dev python3-dev git
