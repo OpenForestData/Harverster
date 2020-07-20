@@ -1,7 +1,7 @@
 import os
 
-from django.test import TestCase
 import factory
+from django.test import TestCase
 from pyDataverse.models import Datafile
 
 from core.models import ResourceMapping, Resource
@@ -15,10 +15,13 @@ class CoreTests(TestCase):
         cls.resource_mapping1 = ResourceMapping()
         cls.resource_mapping2 = ResourceMapping()
 
-        cls.resource1 = Resource(os.environ.get('DASHBOARDS_PARENT_DATAVERSE'), uid=factory.Faker('uuid4'))
+        cls.resource1 = Resource(
+            os.environ.get('DASHBOARDS_PARENT_DATAVERSE'),
+            uid='uuid'
+        )
         cls.resource2 = Resource(
             os.environ.get('DASHBOARDS_PARENT_DATAVERSE'),
-            uid=factory.Faker('uuid4'),
+            uid='uuid2',
             pid='Nonono'
         )
 
