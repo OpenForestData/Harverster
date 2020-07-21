@@ -89,6 +89,7 @@ services:
   harvester_celery:
     <<: *harvester_backend
     image: "registry.gitlab.whiteaster.com/openforestdata/backend/harverster:latest"
+    restart: unless-stopped
     volumes: []
     container_name: "harvester_celery"
     labels: []
