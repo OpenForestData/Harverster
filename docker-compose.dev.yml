@@ -92,6 +92,7 @@ services:
   harvester_celery:
     <<: *harvester_backend
     image: "harvester_celery"
+    restart: unless-stopped
     volumes: []
     container_name: "harvester_celery"
     labels: []

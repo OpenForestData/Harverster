@@ -57,7 +57,7 @@ services:
     volumes:
       - admin_statics:/usr/local/lib/python3.8/site-packages/django/contrib/admin/static/
     environment:
-      - DEBUG=True
+      - DEBUG=False
       - SECRET_KEY=SECRET_KEY_REPLACE
       - DB_ENGINE=django.db.backends.postgresql_psycopg2
       - DB_NAME=harvester
@@ -89,6 +89,7 @@ services:
   harvester_celery:
     <<: *harvester_backend
     image: "registry.gitlab.whiteaster.com/openforestdata/backend/harverster:latest"
+    restart: unless-stopped
     volumes: []
     container_name: "harvester_celery"
     labels: []
