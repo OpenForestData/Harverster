@@ -130,3 +130,21 @@ class HarvestingControllerTests(TestCase):
 
         with pytest.raises(HttpException):
             self.harvesting_controller.delete_resources([resource])
+
+    def test_harvesting_controller_publish_resource(self):
+        self.dataverse_client.publish_dataset = Mock(return_value=ResponseMock(
+            'Text',
+            status_code=200
+        ))
+        resource_mapping_uid = 'uuid_publish_resource'
+
+        self.harvesting_controller.publish_resource(resource_mapping_uid)
+        self.harvesting_controller.publish_resource(resource_mapping_uid, 'major')
+
+        self.dataverse_client.publish_dataset = Mock(return_value=ResponseMock(
+            'Text',
+            status_code=201
+        ))
+
+        with pytest.raises(HttpException):
+            self.harvesting_controller.publish_resource(resource_mapping_uid)
