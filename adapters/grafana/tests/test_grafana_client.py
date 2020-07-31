@@ -25,8 +25,8 @@ class GrafanaTests(TestCase):
 
         cls.get_request_data = [
             {
-                'id': 1, 'uid': 'rKJbnIgGk', 'title': 'New dashboard Copy', 'uri': 'db/new-dashboard-copy',
-                'url': '/d/rKJbnIgGk/new-dashboard-copy', 'slug': '', 'type': 'dash-db', 'tags': [], 'isStarred': False
+                'id': 1, 'uid': 'rKJbnIgGk', 'title': 'New dashboard Cp', 'uri': 'db/new-dashboard-copy',
+                'url': '/d/rKJbnIgGk/new-dashboard-cp', 'slug': '', 'type': 'dash-db', 'tags': [], 'isStarred': False
             },
         ]
 
