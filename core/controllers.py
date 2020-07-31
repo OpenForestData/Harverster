@@ -67,7 +67,7 @@ class HarvestingController:
 
         logger.debug(f'Upload to {self.dataverse_client.base_url} completed.')
 
-    def delete_resources(self, resources: List[Resource]) -> None:
+    def delete_resources(self, resources: List[ResourceMapping]) -> None:
         """
         Delete every resource in list from dataverse
 
@@ -110,7 +110,7 @@ class HarvestingController:
             if resp.status_code != requests.codes.ok:
                 raise HttpException(resp.text)
 
-            if update_publish_type in (None, 'major', 'minor'):
+            if update_publish_type in ('major', 'minor'):
                 self.publish_resource(resource.pid, type_version=update_publish_type)
 
             resource_mapping = ResourceMapping.objects.get(uid=resource.uid)
