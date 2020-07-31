@@ -183,8 +183,7 @@ class GeonodeClient(HarvestingClient):
         :type headers: dict
         :return: response json as dict
         """
-        # TODO: Remove verify argument
-        response = requests.get(self.service_url + path, params=params, headers=headers, verify=False, timeout=10)
+        response = requests.get(self.service_url + path, params=params, headers=headers, timeout=10)
 
         if response.status_code != requests.codes.ok:
             msg = f'GET {self.service_url + path} with params {params} returned: {response.status_code} {response.text}'
