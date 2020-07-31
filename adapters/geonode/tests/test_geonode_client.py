@@ -43,7 +43,7 @@ class GeonodeTests(TestCase):
                 'maintenance_frequency': None, 'online': True, 'owner__username': 'olga',
                 'owner_name': 'olga', 'popular_count': 3, 'purpose': None, 'rating': 0,
                 'regions': ['Global'], 'restriction_code_type': None, 'share_count': 0,
-                'site_url': 'http://geonode_test.com/',
+                'site_url': 'https://geonode_test.com/',
                 'spatial_representation_type': None, 'srid': 'EPSG:4326',
                 'store_type': 'dataset',
                 'supplemental_information': 'Nie umieszczono informacji',
@@ -133,7 +133,7 @@ class GeonodeTests(TestCase):
     def test_geonode_client_get_next_page(self, mock_get_request):
         mock_get_request.return_value = 'Mocked'
 
-        assert self.geonode_client._GeonodeClient__get_next_page('/docs', 10, 10) == 'Mocked'
+        assert self.geonode_client._GeonodeClient__get_next_page('/docs1', 10, 10) == 'Mocked'
 
     @patch('requests.get')
     def test_geonode_client_get_request(self, mock_requests_get):
