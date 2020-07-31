@@ -25,7 +25,7 @@ class GrafanaTests(TestCase):
 
         cls.get_request_data = [
             {
-                'id': 1, 'uid': 'rKJbnIgGk', 'title': 'New dashboard Cp', 'uri': 'db/new-dashboard-copy',
+                'id': 1, 'uid': 'rKJbnIgGk', 'title': 'New dashboard Cp', 'uri': 'db/new-dashboard-cp',
                 'url': '/d/rKJbnIgGk/new-dashboard-cp', 'slug': '', 'type': 'dash-db', 'tags': [], 'isStarred': False
             },
         ]
@@ -33,7 +33,7 @@ class GrafanaTests(TestCase):
         cls.get_detailed_data_item = {
             'meta': {
                 'type': 'db', 'canSave': False, 'canEdit': False, 'canAdmin': False, 'canStar': True,
-                'slug': 'new-dashboard-copy', 'url': '/d/rKJbnIgGk/new-dashboard-copy',
+                'slug': 'new-dashboard-cp', 'url': '/d/rKJbnIgGk/new-dashboard-cp',
                 'expires': '0001-01-01T00:00:00Z', 'created': '2020-05-12T12:21:24Z',
                 'updated': '2020-05-12T12:21:24Z', 'updatedBy': 'test', 'createdBy': 'test', 'version': 1,
                 'hasAcl': False, 'isFolder': False, 'folderId': 0, 'folderTitle': 'General', 'folderUrl': '',
@@ -72,12 +72,12 @@ class GrafanaTests(TestCase):
                 'time': {'from': 'now-6h',
                          'to': 'now'},
                 'timepicker': {}, 'timezone': '',
-                'title': 'New dashboard Copy',
+                'title': 'New dashboard Cp',
                 'uid': 'rKJbnIgGk',
                 'variables': {'list': []},
                 'version': 1},
-            'search': {'id': 1, 'uid': 'rKJbnIgGk', 'title': 'New dashboard Copy', 'uri': 'db/new-dashboard-copy',
-                       'url': '/d/rKJbnIgGk/new-dashboard-copy', 'slug': '', 'type': 'dash-db', 'tags': [],
+            'search': {'id': 1, 'uid': 'rKJbnIgGk', 'title': 'New dashboard Cp', 'uri': 'db/new-dashboard-cp',
+                       'url': '/d/rKJbnIgGk/new-dashboard-cp', 'slug': '', 'type': 'dash-db', 'tags': [],
                        'isStarred': False}
         }
         cls.get_detailed_data_add_uid = 'adfdsffds'
