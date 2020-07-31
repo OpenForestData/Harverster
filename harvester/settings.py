@@ -141,19 +141,19 @@ CLIENTS_DICT = {
     'geonode': {
         'module': 'adapters.geonode.client',
         'class': 'GeonodeClient',
-        'url': os.getenv('GEONODE_API_KEY', None),
+        'url': os.getenv('GEONODE_URL', None),
         'api_key': os.getenv('GEONODE_API_KEY', None)
     },
     'grafana': {
         'module': 'adapters.grafana.client',
         'class': 'GrafanaClient',
-        'url': os.getenv('GRAFANA_API_KEY', None),
+        'url': os.getenv('GRAFANA_URL', None),
         'api_key': os.getenv('GRAFANA_API_KEY', None)
     },
     'orthanc': {
         'module': 'adapters.orthanc.client',
         'class': 'OrthancClient',
-        'url': os.getenv('ORTHANC_API_KEY', None),
+        'url': os.getenv('ORTHANC_URL', None),
         'api_key': os.getenv('ORTHANC_API_KEY', None)
     }
 }
