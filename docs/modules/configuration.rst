@@ -1,11 +1,8 @@
 Configuration
 =============
 
-Configuration page
-
-
-Docker-compose enviroments
---------------------------
+Enviroments
+-----------
 
 - ``SECRET_KEY`` - secret key for django framework. (Default: SECRET_KEY_REPLACE)
 - ``DB_HOST`` - host address for database. (Default: harvester_db)
@@ -19,28 +16,21 @@ Docker-compose enviroments
 - ``DOCUMENTS_PARENT_DATAVERSE`` - dataverse url slug for documents. (Default: documents)
 - ``DASHBOARDS_PARENT_DATAVERSE`` - dataverse url slug for dashboards. (Default: dashboards)
 - ``STUDIES_PARENT_DATAVERSE`` - dataverse url slug for studies. (Default: studies)
+- ``GEONODE_URL`` - geonode url for resources
+- ``GEONODE_API_KEY`` - geonode api key for authenticated resources
+- ``GRAFANA_URL`` - grafana url for resources
+- ``GRAFANA_API_KEY`` - grafana api key for authenticated resources
+- ``ORTHANC_URL`` - orthanc url for resources
+- ``ORTHANC_API_KEY`` - orthanc api key for authenticated resources
 
-Setting
--------
-Clients dict for harvesting task:::
 
-    CLIENTS_DICT = {
-        'geonode': {
-            'module': 'adapters.geonode.client',
-            'class': 'GeonodeClient',
-            'url': 'https://url-to-geonode.com',
-            'api_key': None
-        },
-        'grafana': {
-            'module': 'adapters.grafana.client',
-            'class': 'GrafanaClient',
-            'url': 'https://url-to-grafana.com',
-            'api_key': 'grafana-api-key'
-        },
-        'orthanc': {
-            'module': 'adapters.orthanc.client',
-            'class': 'OrthancClient',
-            'url': 'https://url-to-orthanc.com',
-            'api_key': None
-        }
-    }
+Periodic tasks
+--------------
+
+For periodic tasks arguments you must specify three arguments:
+
+- client - ("geonode", "grafana", "orthanc")
+- create publish - (true, false)
+- update publish - (null, "major", "minor")
+
+e.g. ["geonode", true, "major"]
