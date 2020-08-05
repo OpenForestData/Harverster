@@ -1,0 +1,190 @@
+version: '3.7'
+
+services:
+
+  harvester_traefik:
+    image: "traefik:v2.2"
+    container_name: "harvester_traefik"
+    restart: unless-stopped
+    command:
+        - "--providers.docker=true"
+        - "--providers.docker.exposedbydefault=true"
+        - "--api.insecure=true"
+        - "--entrypoints.web.address=:80"
+        - "--entrypoints.web.forwardedheaders.insecure"
+        - "--entrypoints.web.proxyprotocol.insecure"
+    labels:
+        - com.centurylinklabs.watchtower.enable=false
+    ports:
+        - 80:80
+    volumes:
+        - "/var/run/docker.sock:/var/run/docker.sock:ro"
+    networks:
+        - harvester_network
+
+  harvester_db:
+    container_name: "harvester_db"
+    image: "postgres:12-alpine"
+    restart: unless-stopped
+    volumes:
+      - harvester_db:/var/lib/postgresql
+    environment:
+      - POSTGRES_USER=harvesteruser
+      - POSTGRES_PASSWORD=ctwB28e
+      - POSTGRES_DB=harvester
+    labels:
+        - com.centurylinklabs.watchtower.enable=false
+    networks:
+      - harvester_network
+
+  harvester_redis:
+    container_name: "harvester_redis"
+    image: "redis:6-alpine"
+    restart: unless-stopped
+    labels:
+        - com.centurylinklabs.watchtower.enable=false
+    networks:
+      - harvester_network
+
+  harvester_backend: &harvester_backend
+    container_name: "harvester_backend"
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    volumes:
+      - ./:/app/
+      - admin_statics:/usr/local/lib/python3.8/site-packages/django/contrib/admin/static/
+    environment:
+      - DEBUG=True
+      - SECRET_KEY=SECRET_KEY_REPLACE
+      - DB_ENGINE=django.db.backends.postgresql_psycopg2
+      - URL=${URL}
+      - DB_NAME=harvester
+      - DB_HOST=harvester_db
+      - DB_USER=harvesteruser
+      - DB_PASSWORD=ctwB28e
+      - CELERY_BROKER_URL=redis://harvester_redis:6379/0
+      - DATAVERSE_URL=YOUR_DATAVERSE_URL
+      - DATAVERSE_API_KEY=YOUR_DATAVERSE_API_KEY
+      - LAYERS_PARENT_DATAVERSE=layers
+      - MAPS_PARENT_DATAVERSE=maps
+      - DOCUMENTS_PARENT_DATAVERSE=documents
+      - DASHBOARDS_PARENT_DATAVERSE=dashboards
+      - STUDIES_PARENT_DATAVERSE=studies
+      - GEONODE_URL=YOUR_GEONODE_URL
+      - GEONODE_API_KEY=YOUR_GEONODE_API_KEY
+      - GRAFANA_URL=YOUR_GRAFANA_URL
+      - GRAFANA_API_KEY=YOUR_GRAFANA_API_KEY
+      - ORTHANC_URL=YOUR_ORTHANC_URL
+      - ORTHANC_API_KEY=YOUR_ORTHANC_API_KEY
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.harvester_backend.rule=Host(`${URL}`) && PathPrefix (`/admin`)
+      - traefik.http.services.harvester_backend.loadbalancer.server.port=8000
+      - traefik.http.routers.harvester_backend.entrypoints=web
+      - traefik.http.middlewares.harvester_backend.headers.accesscontrolallowmethods=GET,OPTIONS,PUT,POST,DELETE,PATCH
+      - traefik.http.middlewares.harvester_backend.headers.accesscontrolalloworigin=origin-list-or-null
+      - traefik.http.middlewares.harvester_backend.headers.accesscontrolmaxage=100
+      - traefik.http.middlewares.harvester_backend.headers.addvaryheader=true
+      - com.centurylinklabs.watchtower.enable=true
+    networks:
+      - harvester_network
+
+  harvester_celery:
+    <<: *harvester_backend
+    image: "harvester_celery"
+    restart: unless-stopped
+    volumes: []
+    container_name: "harvester_celery"
+    labels: []
+    command: 'sh -c "/app/docker/entrypoint-celery.sh"'
+
+  harvester_flower:
+    container_name: "harvester_flower"
+    image: "mher/flower"
+    restart: unless-stopped
+    volumes:
+      - flower_statics:/usr/local/lib/python3.8/site-packages/flower/static
+    command: ["flower", "--basic_auth=admin:admin"]
+    environment:
+      - CELERY_BROKER_URL=redis://harvester_redis:6379/0
+      - FLOWER_PORT=8888
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.harvester_flower.rule=Host(`${URL}`) && PathPrefix (`/dashboard`, `/broker`, `/monitor`, `/tasks`, `/logout`, `/worker`, `/api`, `/task`)
+      - traefik.http.services.harvester_flower.loadbalancer.server.port=8888
+      - traefik.http.routers.harvester_flower.entrypoints=web
+      - traefik.http.middlewares.harvester_flower.headers.accesscontrolallowmethods=GET,OPTIONS,PUT,POST,DELETE,PATCH
+      - traefik.http.middlewares.harvester_flower.headers.accesscontrolalloworigin=origin-list-or-null
+      - traefik.http.middlewares.harvester_flower.headers.accesscontrolmaxage=100
+      - traefik.http.middlewares.harvester_flower.headers.addvaryheader=true
+      - com.centurylinklabs.watchtower.enable=true
+    networks:
+      - harvester_network
+
+  harvester_nginx:
+    image: "nginx:1.19-alpine"
+    container_name: "harvester_nginx"
+    restart: unless-stopped
+    volumes:
+      - ./default.conf:/etc/nginx/conf.d/default.conf
+      - flower_statics:/flower_statics
+      - admin_statics:/admin_statics
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.harvester_nginx.rule=Host(`${URL}`)
+      - traefik.http.services.harvester_nginx.loadbalancer.server.port=80
+      - traefik.http.routers.harvester_nginx.entrypoints=web
+      - traefik.http.middlewares.harvester_nginx.headers.accesscontrolallowmethods=GET,OPTIONS,PUT,POST,DELETE,PATCH
+      - traefik.http.middlewares.harvester_nginx.headers.accesscontrolalloworigin=origin-list-or-null
+      - traefik.http.middlewares.harvester_nginx.headers.accesscontrolmaxage=100
+      - traefik.http.middlewares.harvester_nginx.headers.addvaryheader=true
+      - com.centurylinklabs.watchtower.enable=false
+    networks:
+      - harvester_network
+
+  harvester_dozzle:
+    image: "amir20/dozzle:latest"
+    container_name: "harvester_dozzle"
+    restart: unless-stopped
+    environment:
+      - DOZZLE_BASE=/logs
+    labels:
+      - traefik.http.routers.harvester_dozzle.rule=Host(`${URL}`) && PathPrefix (`/logs`)
+      - traefik.http.services.harvester_dozzle.loadbalancer.server.port=8080
+      - traefik.http.routers.harvester_dozzle.entrypoints=web
+      - traefik.http.middlewares.harvester_dozzle.headers.accesscontrolallowmethods=GET,OPTIONS,PUT,POST,DELETE,PATCH
+      - traefik.http.middlewares.harvester_dozzle.headers.accesscontrolalloworigin=origin-list-or-null
+      - traefik.http.middlewares.harvester_dozzle.headers.accesscontrolmaxage=100
+      - traefik.http.middlewares.harvester_dozzle.headers.addvaryheader=true
+      - com.centurylinklabs.watchtower.enable=false
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - harvester_network
+
+  harvester_watchtower:
+    container_name: "harvester_watchtower"
+    image: "containrrr/watchtower"
+    restart: unless-stopped
+    volumes:
+      - ./config.json:/config.json
+      - /var/run/docker.sock:/var/run/docker.sock
+    command: --interval 30 --label-enable
+    labels:
+      - com.centurylinklabs.watchtower.enable=false
+    networks:
+      - harvester_network
+
+  # volumes definiton
+volumes:
+  harvester_db:
+  redis_data:
+  flower_statics:
+  admin_statics:
+
+# network definition
+networks:
+  harvester_network:
+    driver: bridge

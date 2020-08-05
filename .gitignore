@@ -249,5 +249,3 @@ django_warning_logs.log
 
 # Sphinx
 _build/
-
-docker-compose.yml
