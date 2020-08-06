@@ -125,6 +125,8 @@ USE_TZ = True
 
 STATIC_URL = '/static-backend/'
 
+EXTERNAL_FILES_ROOT = '/tmp/'
+
 # Celery
 CELERY_RESULT_BACKEND = 'django-db'
 CELERY_TASK_EAGER_PROPAGATES = True
