@@ -5,6 +5,7 @@ from datetime import datetime
 from typing import List
 
 import requests
+from django.conf import settings
 from django.utils import timezone
 from pyDataverse.models import Datafile
 
@@ -188,15 +189,16 @@ class OrthancClient(HarvestingClient):
             }
 
             # Create file
-            file_name: str = f'{uid}.study_orthanc'
-            # TODO: Fix file open localization
-            file_object = open(file_name, 'w')
+            file_path = settings.EXTERNAL_FILES_ROOT
+            file_name: str = f'{uid}.swf'
+            file_full_path: str = ("/" + file_path + file_name)
+            file_object = open(file_full_path, 'w')
             json.dump(file_data, file_object)
 
             # Create datafile.data
             data: dict = {
                 'description': 'External tool file',
-                'filename': file_name
+                'filename': file_full_path
             }
 
             # Close file
