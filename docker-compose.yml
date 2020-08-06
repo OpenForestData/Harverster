@@ -128,7 +128,7 @@ services:
     container_name: "harvester_nginx"
     restart: unless-stopped
     volumes:
-      - ./default.conf:/etc/nginx/conf.d/default.conf
+      - ./docker/default.conf:/etc/nginx/conf.d/default.conf
       - flower_statics:/flower_statics
       - admin_statics:/admin_statics
     labels:
@@ -140,39 +140,6 @@ services:
       - traefik.http.middlewares.harvester_nginx.headers.accesscontrolalloworigin=origin-list-or-null
       - traefik.http.middlewares.harvester_nginx.headers.accesscontrolmaxage=100
       - traefik.http.middlewares.harvester_nginx.headers.addvaryheader=true
-      - com.centurylinklabs.watchtower.enable=false
-    networks:
-      - harvester_network
-
-  harvester_dozzle:
-    image: "amir20/dozzle:latest"
-    container_name: "harvester_dozzle"
-    restart: unless-stopped
-    environment:
-      - DOZZLE_BASE=/logs
-    labels:
-      - traefik.http.routers.harvester_dozzle.rule=Host(`${URL}`) && PathPrefix (`/logs`)
-      - traefik.http.services.harvester_dozzle.loadbalancer.server.port=8080
-      - traefik.http.routers.harvester_dozzle.entrypoints=web
-      - traefik.http.middlewares.harvester_dozzle.headers.accesscontrolallowmethods=GET,OPTIONS,PUT,POST,DELETE,PATCH
-      - traefik.http.middlewares.harvester_dozzle.headers.accesscontrolalloworigin=origin-list-or-null
-      - traefik.http.middlewares.harvester_dozzle.headers.accesscontrolmaxage=100
-      - traefik.http.middlewares.harvester_dozzle.headers.addvaryheader=true
-      - com.centurylinklabs.watchtower.enable=false
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-    networks:
-      - harvester_network
-
-  harvester_watchtower:
-    container_name: "harvester_watchtower"
-    image: "containrrr/watchtower"
-    restart: unless-stopped
-    volumes:
-      - ./config.json:/config.json
-      - /var/run/docker.sock:/var/run/docker.sock
-    command: --interval 30 --label-enable
-    labels:
       - com.centurylinklabs.watchtower.enable=false
     networks:
       - harvester_network
