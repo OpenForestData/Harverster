@@ -190,8 +190,10 @@ class OrthancClient(HarvestingClient):
 
             # Create file
             file_path = settings.EXTERNAL_FILES_ROOT
+            if file_path[0] != '/':
+                file_path = '/' + file_path
             file_name: str = f'{uid}.swf'
-            file_full_path: str = ("/" + file_path + file_name)
+            file_full_path: str = (file_path + file_name)
             file_object = open(file_full_path, 'w')
             json.dump(file_data, file_object)
 
