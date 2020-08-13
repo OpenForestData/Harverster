@@ -246,7 +246,7 @@ class GrafanaClient(HarvestingClient):
         service_url: str = self.service_url if self.service_url[-1] == '/' else self.service_url[:-1]
         detail_url: str = obj[1:] if obj[0] == '/' else obj
 
-        return service_url + detail_url
+        return service_url + 'd/' + detail_url
 
     def __base_mapping(self, obj: dict) -> dict:
         """
