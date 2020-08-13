@@ -282,6 +282,7 @@ class OrthancClient(HarvestingClient):
                 'datasetContactEmail': 'ofd@ibs.bialowieza.pl',
                 'datasetContactName': self.__unknown_value_mapping(obj['MainDicomTags']['ReferringPhysicianName'])
             }],
+            'dataSources': ['Orthanc'],
             'subject': ['Earth and Environmental Sciences'],
             'dsDescription': [{
                 'dsDescriptionValue': obj['MainDicomTags'].get('StudyDescription', ' ')
