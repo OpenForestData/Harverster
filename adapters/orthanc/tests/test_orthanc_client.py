@@ -85,7 +85,6 @@ class OrthancTests(TestCase):
         assert hasattr(self.orthanc_client, "_OrthancClient__filter_remove_resources")
         assert hasattr(self.orthanc_client, "_OrthancClient__get_request")
         assert hasattr(self.orthanc_client, "_OrthancClient__map_study_to_resource")
-        assert hasattr(self.orthanc_client, "_OrthancClient__email_mapping")
         assert hasattr(self.orthanc_client, "_OrthancClient__date_mapping")
         assert hasattr(self.orthanc_client, "_OrthancClient__unknown_value_mapping")
         assert hasattr(self.orthanc_client, "_OrthancClient__create_alternative_url")

@@ -327,7 +327,7 @@ class GeonodeClient(HarvestingClient):
                         'authorAffiliation': 'Geonode'}],
             'alternativeURL': self.__create_alternative_url(obj['detail_url']),
             'dsDescription': [{'dsDescriptionValue': obj['abstract']}],
-            'datasetContact': [{'datasetContactEmail': obj['owner_name'] + '@test.com',
+            'datasetContact': [{'datasetContactEmail': 'ofd@ibs.bialowieza.pl',
                                 'datasetContactName': obj['owner_name']}],
             'subject': ['Earth and Environmental Sciences'],
         }

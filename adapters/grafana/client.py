@@ -263,7 +263,7 @@ class GrafanaClient(HarvestingClient):
             'author': [{'authorName': obj['meta']['createdBy'],
                         'authorAffiliation': 'Grafana'}],
             'alternativeURL': self.__create_alternative_url(obj['search']['uid']),
-            'datasetContact': [{'datasetContactEmail': obj['meta']['createdBy'] + '@test.com',
+            'datasetContact': [{'datasetContactEmail': 'ofd@ibs.bialowieza.pl',
                                 'datasetContactName': obj['meta']['createdBy']}],
             'subject': ['Earth and Environmental Sciences'],
             'dsDescription': [{'dsDescriptionValue': ''}],

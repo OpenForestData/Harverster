@@ -220,20 +220,6 @@ class OrthancClient(HarvestingClient):
         return res
 
     @staticmethod
-    def __email_mapping(obj: str) -> str:
-        """
-        Map email argument if exists or return default value
-
-        :param obj: string to map
-        :type obj: str
-        :return: Mapped string with original email or default value
-        """
-        if physician_name := obj:
-            return physician_name + '@test.pl'
-
-        return 'unknown@test.pl'
-
-    @staticmethod
     def __date_mapping(obj: str) -> str:
         """
         Map argument date if exists or return default value
@@ -293,7 +279,7 @@ class OrthancClient(HarvestingClient):
             }],
             'alternativeURL': self.__create_alternative_url(obj['ID']),
             'datasetContact': [{
-                'datasetContactEmail': self.__email_mapping(obj['MainDicomTags']['ReferringPhysicianName']),
+                'datasetContactEmail': 'ofd@ibs.bialowieza.pl',
                 'datasetContactName': self.__unknown_value_mapping(obj['MainDicomTags']['ReferringPhysicianName'])
             }],
             'subject': ['Earth and Environmental Sciences'],
