@@ -329,6 +329,7 @@ class GeonodeClient(HarvestingClient):
             'dsDescription': [{'dsDescriptionValue': obj['abstract']}],
             'datasetContact': [{'datasetContactEmail': 'ofd@ibs.bialowieza.pl',
                                 'datasetContactName': obj['owner_name']}],
+            'dataSources': ['Geonode'],
             'subject': ['Earth and Environmental Sciences'],
         }
 
