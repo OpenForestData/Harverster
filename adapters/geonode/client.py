@@ -186,10 +186,11 @@ class GeonodeClient(HarvestingClient):
         response = requests.get(self.service_url + path, params=params, headers=headers, timeout=10)
 
         if response.status_code != requests.codes.ok:
-            msg = f'GET {self.service_url + path} with params {params} returned: {response.status_code} {response.text}'
+            msg = f'GET {self.service_url + path} with params {params}' \
+                  f' returned: {response.status_code} {response.content}'
             raise HttpException(msg)
 
-        return json.loads(response.text)
+        return json.loads(response.content.decode('utf-8'))
 
     def __map_layer_to_resource(self, layer: dict, create_file: bool = True) -> Resource:
         """
