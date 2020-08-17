@@ -11,9 +11,9 @@ from core.models import ResourceMapping
 
 
 class ResponseMock:
-    def __init__(self, text=None, status_code=200):
+    def __init__(self, content=None, status_code=200):
         self.status_code = status_code
-        self.text = text
+        self.content = content
 
 
 class GeonodeTests(TestCase):
@@ -138,13 +138,13 @@ class GeonodeTests(TestCase):
     @patch('requests.get')
     def test_geonode_client_get_request(self, mock_requests_get):
         resp = ResponseMock(
-            text=json.dumps(self.get_request_data)
+            content=json.dumps(self.get_request_data)
         )
         mock_requests_get.return_value = resp
 
         assert self.geonode_client._GeonodeClient__get_request('/docs', {}) == self.get_request_data
 
-        resp = ResponseMock(text=json.dumps(self.get_request_data), status_code=400)
+        resp = ResponseMock(content=json.dumps(self.get_request_data), status_code=400)
         mock_requests_get.return_value = resp
 
         with pytest.raises(HttpException):
