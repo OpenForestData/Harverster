@@ -138,13 +138,13 @@ class GeonodeTests(TestCase):
     @patch('requests.get')
     def test_geonode_client_get_request(self, mock_requests_get):
         resp = ResponseMock(
-            content=bytes(json.dumps(self.get_request_data))
+            content=bytes(json.dumps(self.get_request_data), 'utf-8')
         )
         mock_requests_get.return_value = resp
 
         assert self.geonode_client._GeonodeClient__get_request('/docs', {}) == self.get_request_data
 
-        resp = ResponseMock(content=bytes(json.dumps(self.get_request_data)), status_code=400)
+        resp = ResponseMock(content=bytes(json.dumps(self.get_request_data), 'utf-8'), status_code=400)
         mock_requests_get.return_value = resp
 
         with pytest.raises(HttpException):
