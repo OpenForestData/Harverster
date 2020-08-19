@@ -16,14 +16,14 @@ class HarvestingClient(ABC):
         self.api_key = api_key
 
     @abstractmethod
-    def harvest(self) -> List[Resource]:
+    def harvest(self, force_update: bool = False) -> List[Resource]:
         """
         Function loads data from designated system and uploads it to Dataverse
         """
 
     @abstractmethod
-    def get_resources(self, resource_path: str, resource_map_function, resource_mapping_category) -> (
-            List[Resource], List[Resource], list):
+    def get_resources(self, resource_path: str, resource_map_function, resource_mapping_category,
+                      force_update: bool = False) -> (List[Resource], List[Resource], list):
         """
         Fetch data from Source API endpoint and map it to Resource and return it as a list of add/update/remove
         Resources
@@ -32,5 +32,7 @@ class HarvestingClient(ABC):
         :type resource_path: str
         :param resource_map_function: function mapping data type retrieved from endpoint to Resource object
         :param resource_mapping_category: category of mapping showed in ResourceMapping category field
+        :param force_update: force updating every resource with resource mapping
+        :type force_update: bool
         :return: list of fetched data as Resources list
         """

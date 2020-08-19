@@ -86,21 +86,29 @@ class GrafanaTests(TestCase):
         }
         cls.get_detailed_data_add_uid = 'adfdsffds'
         cls.resource_mapping_added_uid = 'adfdsfcz'
+        cls.resource_mapping_updated_uid = 'askjfhcnA'
         cls.resource_mapping_remove_uid = 'abcbnIgGA'
 
         cls.get_request_data.append({**cls.get_request_data[0], 'uid': cls.get_detailed_data_add_uid})
         cls.get_request_data.append({**cls.get_request_data[0], 'uid': cls.resource_mapping_added_uid})
+        cls.get_request_data.append({**cls.get_request_data[0], 'uid': cls.resource_mapping_updated_uid})
         cls.get_detailed_data = [
             cls.get_detailed_data_item,
             {
                 **cls.get_detailed_data_item, 'search': {
-                **cls.get_detailed_data_item['search'],
-                'uid': cls.get_detailed_data_add_uid}
+                    **cls.get_detailed_data_item['search'],
+                    'uid': cls.get_detailed_data_add_uid}
             },
             {
                 **cls.get_detailed_data_item, 'search': {
-                **cls.get_detailed_data_item['search'],
-                'uid': cls.resource_mapping_added_uid}
+                    **cls.get_detailed_data_item['search'],
+                    'uid': cls.resource_mapping_added_uid}
+            },
+            {
+                **cls.get_detailed_data_item, 'search': {
+                    **cls.get_detailed_data_item['search'],
+                    'uid': cls.resource_mapping_updated_uid},
+                'pid': 'PID'
             },
         ]
 
@@ -110,6 +118,9 @@ class GrafanaTests(TestCase):
         cls.resource_mapping_added = ResourceMapping(uid=cls.resource_mapping_added_uid, pid='PID_ADDED',
                                                      last_update=timezone.now() - timezone.timedelta(weeks=30),
                                                      category=ResourceMapping.DASHBOARD).save()
+        cls.resource_mapping_updated = ResourceMapping(uid=cls.resource_mapping_updated_uid, pid='PID_UPDATED',
+                                                       last_update=timezone.now() - timezone.timedelta(weeks=35),
+                                                       category=ResourceMapping.DASHBOARD).save()
         cls.resource_mapping_remove = ResourceMapping(uid=cls.resource_mapping_remove_uid,
                                                       pid='PID_DELETE', last_update=timezone.now(),
                                                       category=ResourceMapping.DASHBOARD).save()
@@ -126,10 +137,21 @@ class GrafanaTests(TestCase):
         assert hasattr(self.grafana_client, "_GrafanaClient__create_alternative_url")
         assert hasattr(self.grafana_client, "_GrafanaClient__base_mapping")
 
+    @patch('adapters.grafana.client.GrafanaClient.get_resources')
+    def test_grafana_client_harvest(self, mock_get_resources):
+        mock_get_resources.return_value = (['add_data'], [], ['remove_data'])
+
+        add_data, update_data, remove_data = self.grafana_client.harvest()
+
+        assert len(add_data) == 1
+        assert add_data[0] == 'add_data'
+        assert len(update_data) == 0
+        assert remove_data[0] == 'remove_data'
+
     @patch('adapters.grafana.client.GrafanaClient._GrafanaClient__get_detailed_data')
     @patch('adapters.grafana.client.GrafanaClient._GrafanaClient__get_next_page')
     @patch('adapters.grafana.client.GrafanaClient._GrafanaClient__get_request')
-    def test_grafana_client_harvest(self, mock_get_request, mock_get_next_page_data, mock_get_detailed_data):
+    def test_grafana_client_get_resources(self, mock_get_request, mock_get_next_page_data, mock_get_detailed_data):
         mock_get_request.return_value = self.get_request_data
         mock_get_next_page_data.return_value = []
         mock_get_detailed_data.return_value = self.get_detailed_data
@@ -181,5 +203,5 @@ class GrafanaTests(TestCase):
             self.grafana_client._GrafanaClient__get_request('/dashboards', {})
 
     def test_grafana_client_map_dashboard_to_resource(self):
-        assert (self.grafana_client._GrafanaClient__map_dashboard_to_resource(self.get_detailed_data[0], False).uid ==
-                self.get_detailed_data[0]['search']['uid'])
+        assert (self.grafana_client._GrafanaClient__map_dashboard_to_resource(self.get_detailed_data[3], False).uid ==
+                self.get_detailed_data[3]['search']['uid'])
