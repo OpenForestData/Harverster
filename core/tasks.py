@@ -11,13 +11,16 @@ logger = logging.getLogger(__name__)
 
 
 @shared_task()
-def run_harvester(name: str, publish_added: bool = False, update_publish_type: str = None) -> None:
+def run_harvester(name: str, publish_added: bool = False, update_publish_type: str = None,
+                  force_update: bool = False) -> None:
     """
     Using designated client harvests data form specified system
 
     :param name: client name
     :param publish_added: True publish added resources after getting persistentID. False skip publishing
     :param update_publish_type: (None, 'minor', 'major') Type of publishing data after updating dataset
+    :param force_update: force updating every resource with resource mapping
+    :type force_update: bool
     :return: None
     """
     logger.debug(f"Starting run harvest function for {name}")
@@ -26,7 +29,7 @@ def run_harvester(name: str, publish_added: bool = False, update_publish_type: s
 
     harvester = HarvestingController(app_client, dataverse_client)
 
-    add_data, modify_data, remove_data = harvester.run_harvest()
+    add_data, modify_data, remove_data = harvester.run_harvest(force_update)
     logger.debug(f"Harvested data from source of {name}")
 
     if add_data:

@@ -6,13 +6,14 @@ class Resource:
     """
     Represents resource imported form harvested systems
     """
+    last_update = None
 
     def __init__(
             self,
             parent_dataverse: str,
             datafile: Datafile = None,
             uid: str = None,
-            pid: str = None
+            pid: str = None,
     ):
         self.parent_dataverse = parent_dataverse
         self.dataset: Dataset = Dataset()

@@ -4,9 +4,9 @@ import os
 from datetime import datetime
 from typing import List
 
+import pytz
 import requests
 from django.conf import settings
-from django.utils import timezone
 from pyDataverse.models import Datafile
 
 from core.clients import HarvestingClient
@@ -25,17 +25,19 @@ class OrthancClient(HarvestingClient):
     Harvesting Client for harvesting Resources from Orthanc
     """
 
-    def harvest(self) -> (List[Resource], List[Resource], list):
+    def harvest(self, force_update: bool = False) -> (List[Resource], List[Resource], list):
         """
         Harvests every resource from Orthanc and returns is as a list of Resources
 
+        :param force_update: force updating every resource with resource mapping
+        :type force_update: bool
         :return: list of harvested data from Orthanc
         """
 
-        return self.get_resources('studies/', self.__map_study_to_resource, ResourceMapping.STUDY)
+        return self.get_resources('studies/', self.__map_study_to_resource, ResourceMapping.STUDY, force_update)
 
-    def get_resources(self, resource_path: str, resource_map_function, resource_mapping_category) -> (
-            List[Resource], List[Resource], list):
+    def get_resources(self, resource_path: str, resource_map_function, resource_mapping_category,
+                      force_update: bool = False) -> (List[Resource], List[Resource], list):
         """
         Fetch data from Orthanc API endpoint, maps it to Resource and returns it as a list of Resources
 
@@ -43,6 +45,8 @@ class OrthancClient(HarvestingClient):
         :type resource_path: str
         :param resource_map_function: function mapping data type retrieved from endpoint to Resource object
         :param resource_mapping_category: category of mapping showed in ResourceMapping category field
+        :param force_update: force updating every resource with resource mapping
+        :type force_update: bool
         :return: list of fetched data as Resources list
         """
         try:
@@ -56,7 +60,8 @@ class OrthancClient(HarvestingClient):
 
         add_resources: List[Resource] = self.__filter_new_resources(resources, resource_map_function,
                                                                     resource_mapping_category)
-        update_resources: List[Resource] = self.__filter_update_resources(resources, resource_map_function)
+        update_resources: List[Resource] = self.__filter_update_resources(resources, resource_map_function,
+                                                                          force_update)
         delete_resources: list = self.__filter_remove_resources(resources)
 
         return add_resources, update_resources, delete_resources
@@ -98,14 +103,16 @@ class OrthancClient(HarvestingClient):
 
             if resource_mapping is None or resource_mapping.pid is None:
                 if resource_mapping is None:
-                    ResourceMapping(uid=uid, pid=None, last_update=timezone.now(), category=category).save()
+                    date = datetime.strptime(resource['LastUpdate'], '%Y%m%dT%H%M%S')
+
+                    ResourceMapping(uid=uid, pid=None, last_update=date, category=category).save()
 
                 add_resources.append(resource)
 
         return [resource_map_function(resource) for resource in add_resources]
 
     @staticmethod
-    def __filter_update_resources(resources: list, resource_map_function) -> List[Resource]:
+    def __filter_update_resources(resources: list, resource_map_function, force_update: bool = False) -> List[Resource]:
         """
         Filter only Resources to update in raw data from source
 
@@ -123,8 +130,8 @@ class OrthancClient(HarvestingClient):
             resource['pid'] = resource_mapping.pid if resource_mapping.pid else None
             date = datetime.strptime(resource['LastUpdate'], '%Y%m%dT%H%M%S')
 
-            if resource_mapping is not None and (
-                    resource_mapping.last_update.replace(tzinfo=None) < date):
+            if resource_mapping is not None and resource_mapping.pid is not None and (
+                    resource_mapping.last_update.replace(tzinfo=None) < date or force_update):
                 update_resources.append(resource)
 
         return [resource_map_function(resource, create_file=False) for resource in update_resources]
@@ -217,6 +224,8 @@ class OrthancClient(HarvestingClient):
         for key, val in mapping.items():
             setattr(res.dataset, key, val)
 
+        res.last_update = datetime.strptime(study['LastUpdate'], '%Y%m%dT%H%M%S').replace(tzinfo=pytz.UTC)
+
         return res
 
     @staticmethod
@@ -285,7 +294,7 @@ class OrthancClient(HarvestingClient):
             'dataSources': ['Orthanc'],
             'subject': ['Earth and Environmental Sciences'],
             'dsDescription': [{
-                'dsDescriptionValue': obj['MainDicomTags'].get('StudyDescription', ' ')
+                'dsDescriptionValue': obj['MainDicomTags'].get('StudyDescription', 'Unknown')
             }],
             'depositor': self.__unknown_value_mapping(obj['MainDicomTags']['ReferringPhysicianName']),
             'dateOfDeposit': self.__date_mapping(obj['MainDicomTags']['StudyDate']),

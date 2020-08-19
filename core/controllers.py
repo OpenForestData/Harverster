@@ -22,7 +22,7 @@ class HarvestingController:
         self.harvesting_client = harvesting_client
         self.dataverse_client = dataverse_client
 
-    def run_harvest(self) -> (List[Resource], List[Resource], List[Resource]):
+    def run_harvest(self, force_update: bool = False) -> (List[Resource], List[Resource], List[Resource]):
         """
         Run harvesting client and return list of resources to add/update/remove
 
@@ -31,7 +31,7 @@ class HarvestingController:
         logger.debug(f'Starting harvest from {self.harvesting_client.service_url}.')
 
         # Get all results
-        result = self.harvesting_client.harvest()
+        result = self.harvesting_client.harvest(force_update)
         logger.debug(f'Harvest from {self.harvesting_client.service_url} completed.')
         return result
 
@@ -114,7 +114,7 @@ class HarvestingController:
                 self.publish_resource(resource.pid, type_version=update_publish_type)
 
             resource_mapping = ResourceMapping.objects.get(uid=resource.uid)
-            resource_mapping.last_update = timezone.now()
+            resource_mapping.last_update = resource.last_update or timezone.now()
             resource_mapping.save()
 
         logger.debug(f'Updating datasets from {self.dataverse_client.base_url} completed.')
