@@ -24,17 +24,20 @@ class GrafanaClient(HarvestingClient):
     Harvesting Client for harvesting Resources from Grafana
     """
 
-    def harvest(self) -> (List[Resource], list, list):
+    def harvest(self, force_update: bool = False) -> (List[Resource], list, list):
         """
         Harvests every resource from Grafana and returns is as a list of Resources
 
+        :param force_update: force updating every resource with resource mapping
+        :type force_update: bool
         :return: list of harvested data from Grafana
         """
 
-        return self.get_resources('api/search/', self.__map_dashboard_to_resource, ResourceMapping.DASHBOARD)
+        return self.get_resources('api/search/', self.__map_dashboard_to_resource, ResourceMapping.DASHBOARD,
+                                  force_update)
 
-    def get_resources(self, resource_path: str, resource_map_function, resource_mapping_category) -> (
-            List[Resource], list, list):
+    def get_resources(self, resource_path: str, resource_map_function, resource_mapping_category,
+                      force_update: bool = False) -> (List[Resource], list, list):
         """
         Fetch data from Grafana API endpoint, maps it to Resource and returns it as a list of add/update/remove
         Resources
@@ -43,6 +46,8 @@ class GrafanaClient(HarvestingClient):
         :type resource_path: str
         :param resource_map_function: function mapping data type retrieved from endpoint to Resource object
         :param resource_mapping_category: category of mapping showed in ResourceMapping category field
+        :param force_update: force updating every resource with resource mapping
+        :type force_update: bool
         :return: list of fetched data as Resources list
         """
         params: dict = {
@@ -66,9 +71,12 @@ class GrafanaClient(HarvestingClient):
         resources: list = self.__get_detailed_data(resources)
         add_resources: List[Resource] = self.__filter_new_resources(resources, resource_map_function,
                                                                     resource_mapping_category)
+        update_resources = []
+        if force_update:
+            update_resources = self.__filter_update_resources(resources, resource_map_function)
         delete_resources: list = self.__filter_remove_resources(resources)
 
-        return add_resources, [], delete_resources
+        return add_resources, update_resources, delete_resources
 
     @staticmethod
     def __filter_new_resources(resources: list, resource_map_function, category) -> List[Resource]:
@@ -94,6 +102,29 @@ class GrafanaClient(HarvestingClient):
                 add_resources.append(resource)
 
         return [resource_map_function(resource) for resource in add_resources]
+
+    @staticmethod
+    def __filter_update_resources(resources: list, resource_map_function) -> List[Resource]:
+        """
+        Filter only Resources to update in raw data from source
+
+        :param resources: fetched data from source with resources raw data
+        :type resources: list
+        :param resource_map_function: mapping function for resource
+        :return: list of mapped resources
+        """
+        update_resources: list = []
+
+        for resource in resources:
+            uid: str = resource['search']['uid']
+            resource_mapping: ResourceMapping = ResourceMapping.objects.filter(uid=uid).first()
+
+            resource['pid'] = resource_mapping.pid if resource_mapping.pid else None
+
+            if resource_mapping is not None and resource_mapping.pid is not None:
+                update_resources.append(resource)
+
+        return [resource_map_function(resource, create_file=False) for resource in update_resources]
 
     @staticmethod
     def __filter_remove_resources(resources: list) -> list:
@@ -226,12 +257,16 @@ class GrafanaClient(HarvestingClient):
 
             res: Resource = Resource(os.environ.get('DASHBOARDS_PARENT_DATAVERSE'), datafile=datafile, uid=uid)
         else:
-            res: Resource = Resource(os.environ.get('DASHBOARDS_PARENT_DATAVERSE'), uid=uid)
+            pid: str = dashboard['pid']
+
+            res: Resource = Resource(os.environ.get('DASHBOARDS_PARENT_DATAVERSE'), pid=pid, uid=uid)
 
         mapping: dict = self.__base_mapping(dashboard)
 
         for key, val in mapping.items():
             setattr(res.dataset, key, val)
+
+        res.last_update = timezone.now()
 
         return res
 
@@ -256,7 +291,6 @@ class GrafanaClient(HarvestingClient):
         :type obj: dict
         :return: mapped resource
         """
-        # TODO: Fix keyword mapping
         return {
             'title': obj['search']['title'],
             'publicationDate': obj['meta']['created'],
@@ -267,7 +301,7 @@ class GrafanaClient(HarvestingClient):
                                 'datasetContactName': obj['meta']['createdBy']}],
             'dataSources': ['Grafana'],
             'subject': ['Earth and Environmental Sciences'],
-            'dsDescription': [{'dsDescriptionValue': ''}],
+            'dsDescription': [{'dsDescriptionValue': obj['search'].get('title', 'Unknown')}],
             'depositor': obj['meta']['createdBy'],
             'dateOfDeposit': obj['meta']['created'],
         }

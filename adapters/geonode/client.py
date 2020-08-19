@@ -30,15 +30,18 @@ class GeonodeClient(HarvestingClient):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-    def harvest(self) -> (List[Resource], List[Resource], list):
+    def harvest(self, force_update: bool = False) -> (List[Resource], List[Resource], list):
         """
         Harvests every resource from Geonode and returns as a list of add/update/remove Resources
 
+        :param force_update: force updating every resource with resource mapping
+        :type force_update: bool
         :return: list of add/update/remove lists with Resources of harvested data from Geonode
         """
-        layers = self.get_resources('api/layers/', self.__map_layer_to_resource, ResourceMapping.LAYER)
-        maps = self.get_resources('api/maps/', self.__map_map_to_resource, ResourceMapping.MAP)
-        documents = self.get_resources('api/documents/', self.__map_document_to_resource, ResourceMapping.DOCUMENT)
+        layers = self.get_resources('api/layers/', self.__map_layer_to_resource, ResourceMapping.LAYER, force_update)
+        maps = self.get_resources('api/maps/', self.__map_map_to_resource, ResourceMapping.MAP, force_update)
+        documents = self.get_resources('api/documents/', self.__map_document_to_resource, ResourceMapping.DOCUMENT,
+                                       force_update)
 
         add_data = layers[0] + maps[0] + documents[0]
         update_data = layers[1] + maps[1] + documents[1]
@@ -46,9 +49,10 @@ class GeonodeClient(HarvestingClient):
 
         return add_data, update_data, remove_data
 
-    def get_resources(self, resource_path: str, resource_map_function, resource_mapping_category) -> (List[Resource],
-                                                                                                      List[Resource],
-                                                                                                      list):
+    def get_resources(self, resource_path: str, resource_map_function, resource_mapping_category,
+                      force_update: bool = False) -> (List[Resource],
+                                                      List[Resource],
+                                                      list):
         """
         Fetch data from Geonode API endpoint, maps it to Resource and returns it as a list of Resources to add, update
         and remove
@@ -57,6 +61,8 @@ class GeonodeClient(HarvestingClient):
         :type resource_path: str
         :param resource_map_function: function mapping data type retrieved from endpoint to Resource object
         :param resource_mapping_category: category of mapping showed in ResourceMapping category field
+        :param force_update: force updating every resource with resource mapping
+        :type force_update: bool
         :return: list of add/update/remove fetched data as Resources lists
         """
         params: dict = {
@@ -77,7 +83,7 @@ class GeonodeClient(HarvestingClient):
             resources += results['objects']
 
         add_resources: list = self.__filter_new_resources(resources, resource_map_function, resource_mapping_category)
-        update_resources: list = self.__filter_update_resources(resources, resource_map_function)
+        update_resources: list = self.__filter_update_resources(resources, resource_map_function, force_update)
         delete_resources: list = self.__filter_remove_resources(resources, resource_mapping_category)
 
         return add_resources, update_resources, delete_resources
@@ -109,12 +115,15 @@ class GeonodeClient(HarvestingClient):
         return [resource_map_function(resource) for resource in add_resources]
 
     @staticmethod
-    def __filter_update_resources(resources: list, resource_map_function) -> List[Resource]:
+    def __filter_update_resources(resources: list, resource_map_function, force_update: bool = False) -> List[Resource]:
         """
         Filter only Resources to update in raw data from source
 
         :param resources: fetched data from source with resources raw data
+        :type resources: list
         :param resource_map_function: mapping function for resource
+        :param force_update: force updating every resource with resource mapping
+        :type force_update: bool
         :return: list of mapped resources
         """
         update_resources: list = []
@@ -126,8 +135,8 @@ class GeonodeClient(HarvestingClient):
             resource['pid'] = resource_mapping.pid if resource_mapping.pid else None
             date = parse_datetime(resource['date'])
 
-            if resource_mapping is not None and (
-                    resource_mapping.last_update.replace(tzinfo=None) < date):
+            if resource_mapping is not None and resource_mapping.pid is not None and (
+                    resource_mapping.last_update.replace(tzinfo=None) < date or force_update):
                 update_resources.append(resource)
 
         return [resource_map_function(resource, create_file=False) for resource in update_resources]
@@ -217,6 +226,8 @@ class GeonodeClient(HarvestingClient):
         for key, val in mapping.items():
             setattr(res.dataset, key, val)
 
+        res.last_update = parse_datetime(layer['date']).replace(tzinfo=pytz.UTC)
+
         return res
 
     def __map_map_to_resource(self, geomap: dict, create_file: bool = True) -> Resource:
@@ -273,6 +284,8 @@ class GeonodeClient(HarvestingClient):
         for key, val in mapping.items():
             setattr(res.dataset, key, val)
 
+        res.last_update = parse_datetime(geomap['date']).replace(tzinfo=pytz.UTC)
+
         return res
 
     def __map_document_to_resource(self, document: dict, create_file: bool = True) -> Resource:
@@ -298,6 +311,8 @@ class GeonodeClient(HarvestingClient):
 
         for key, val in mapping.items():
             setattr(res.dataset, key, val)
+
+        res.last_update = parse_datetime(document['date']).replace(tzinfo=pytz.UTC)
 
         return res
 
