@@ -284,7 +284,7 @@ class OrthancClient(HarvestingClient):
             'publicationDate': self.__date_mapping(obj['MainDicomTags']['StudyDate']),
             'author': [{
                 'authorName': self.__unknown_value_mapping(obj['MainDicomTags']['ReferringPhysicianName']),
-                'authorAffiliation': 'Orthanc'
+                'authorAffiliation': ' '
             }],
             'alternativeURL': self.__create_alternative_url(obj['ID']),
             'datasetContact': [{

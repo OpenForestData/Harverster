@@ -340,7 +340,7 @@ class GeonodeClient(HarvestingClient):
         return {
             'title': obj['title'],
             'author': [{'authorName': obj['owner_name'],
-                        'authorAffiliation': 'Geonode'}],
+                        'authorAffiliation': ' '}],
             'alternativeURL': self.__create_alternative_url(obj['detail_url']),
             'dsDescription': [{'dsDescriptionValue': obj['abstract']}],
             'datasetContact': [{'datasetContactEmail': 'ofd@ibs.bialowieza.pl',
