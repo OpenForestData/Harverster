@@ -295,7 +295,7 @@ class GrafanaClient(HarvestingClient):
             'title': obj['search']['title'],
             'publicationDate': obj['meta']['created'],
             'author': [{'authorName': obj['meta']['createdBy'],
-                        'authorAffiliation': 'Grafana'}],
+                        'authorAffiliation': ' '}],
             'alternativeURL': self.__create_alternative_url(obj['search']['uid']),
             'datasetContact': [{'datasetContactEmail': 'ofd@ibs.bialowieza.pl',
                                 'datasetContactName': obj['meta']['createdBy']}],
