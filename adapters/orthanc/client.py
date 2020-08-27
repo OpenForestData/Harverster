@@ -280,11 +280,12 @@ class OrthancClient(HarvestingClient):
         return {
             'title':
                 self.__unknown_value_mapping(obj['PatientMainDicomTags']['PatientName']
-                                             ) + ' ' + self.__unknown_value_mapping(obj['MainDicomTags']['StudyID']),
+                                             ) + ' ' + self.__unknown_value_mapping(
+                    self.__unknown_value_mapping(obj['PatientMainDicomTags']['PatientID'])),
             'publicationDate': self.__date_mapping(obj['MainDicomTags']['StudyDate']),
             'author': [{
                 'authorName': self.__unknown_value_mapping(obj['MainDicomTags']['ReferringPhysicianName']),
-                'authorAffiliation': ' '
+                'authorAffiliation': obj['MainDicomTags']['InstitutionName']
             }],
             'alternativeURL': self.__create_alternative_url(obj['ID']),
             'datasetContact': [{

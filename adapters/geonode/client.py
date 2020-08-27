@@ -329,6 +329,15 @@ class GeonodeClient(HarvestingClient):
 
         return service_url + detail_url
 
+    def __keywords_mapping(self, obj: list) -> list:
+        """
+        Maps keywords on compatible list of objects for dataverse Resource
+
+        :param obj: list of keywords from geonode api
+        :return: mapped keywords
+        """
+        return [{'keywordValue': value, 'keywordVocabulary': '', 'keywordVocabularyURI': ''} for value in obj]
+
     def __base_mapping(self, obj: dict) -> dict:
         """
         Map raw data to compatible format for dataverse Resource
@@ -347,6 +356,8 @@ class GeonodeClient(HarvestingClient):
                                 'datasetContactName': obj['owner_name']}],
             'dataSources': ['Geonode'],
             'subject': ['Earth and Environmental Sciences'],
+            'license': obj['licence'],
+            'keywords': self.__keywords_mapping(obj['keywords']),
         }
 
     @staticmethod
