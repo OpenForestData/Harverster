@@ -238,8 +238,11 @@ class OrthancClient(HarvestingClient):
         :return: Mapped string with mapped data to specific format or default value
         """
         if date_value := obj.strip():
-            return datetime.strptime(date_value, '%Y%m%d').strftime('%Y-%m-%d')
-
+            try:
+                date_string = datetime.strptime(date_value, '%Y%m%d').strftime('%Y-%m-%d')
+                return date_string
+            except ValueError as e:
+                logger.debug(f'Orthanc __date_mapping method returned error: {e}')
         return datetime.now().strftime('%Y-%m-%d')
 
     @staticmethod
@@ -293,10 +296,17 @@ class OrthancClient(HarvestingClient):
                 'datasetContactName': self.__unknown_value_mapping(obj['MainDicomTags']['ReferringPhysicianName'])
             }],
             'dataSources': ['Orthanc'],
-            'subject': ['Earth and Environmental Sciences'],
+            'subject': ['Medicine, Health and Life Sciences'],
             'dsDescription': [{
                 'dsDescriptionValue': obj['MainDicomTags'].get('StudyDescription', 'Unknown')
             }],
             'depositor': self.__unknown_value_mapping(obj['MainDicomTags']['ReferringPhysicianName']),
             'dateOfDeposit': self.__date_mapping(obj['MainDicomTags']['StudyDate']),
+            'timePeriodCovered': [{
+                'timePeriodCoveredStart': self.__date_mapping(
+                    getattr(obj['PatientMainDicomTags'], 'PatientBirthDate', ""),
+                ),
+                'timePeriodCoveredEnd': self.__date_mapping(
+                    getattr(obj['PatientMainDicomTags'], 'PatientBirthDate', "")
+                )}],
         }
