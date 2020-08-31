@@ -238,8 +238,11 @@ class OrthancClient(HarvestingClient):
         :return: Mapped string with mapped data to specific format or default value
         """
         if date_value := obj.strip():
-            return datetime.strptime(date_value, '%Y%m%d').strftime('%Y-%m-%d')
-
+            try:
+                date_string = datetime.strptime(date_value, '%Y%m%d').strftime('%Y-%m-%d')
+                return date_string
+            except ValueError as err:
+                logger.debug(f'Orthanc __date_mapping method returned error: {err}')
         return datetime.now().strftime('%Y-%m-%d')
 
     @staticmethod
@@ -280,11 +283,12 @@ class OrthancClient(HarvestingClient):
         return {
             'title':
                 self.__unknown_value_mapping(obj['PatientMainDicomTags']['PatientName']
-                                             ) + ' ' + self.__unknown_value_mapping(obj['MainDicomTags']['StudyID']),
+                                             ) + ' ' + self.__unknown_value_mapping(
+                    self.__unknown_value_mapping(obj['PatientMainDicomTags']['PatientID'])),
             'publicationDate': self.__date_mapping(obj['MainDicomTags']['StudyDate']),
             'author': [{
                 'authorName': self.__unknown_value_mapping(obj['MainDicomTags']['ReferringPhysicianName']),
-                'authorAffiliation': ' '
+                'authorAffiliation': obj['MainDicomTags']['InstitutionName']
             }],
             'alternativeURL': self.__create_alternative_url(obj['ID']),
             'datasetContact': [{
@@ -292,10 +296,17 @@ class OrthancClient(HarvestingClient):
                 'datasetContactName': self.__unknown_value_mapping(obj['MainDicomTags']['ReferringPhysicianName'])
             }],
             'dataSources': ['Orthanc'],
-            'subject': ['Earth and Environmental Sciences'],
+            'subject': ['Medicine, Health and Life Sciences'],
             'dsDescription': [{
                 'dsDescriptionValue': obj['MainDicomTags'].get('StudyDescription', 'Unknown')
             }],
             'depositor': self.__unknown_value_mapping(obj['MainDicomTags']['ReferringPhysicianName']),
             'dateOfDeposit': self.__date_mapping(obj['MainDicomTags']['StudyDate']),
+            'timePeriodCovered': [{
+                'timePeriodCoveredStart': self.__date_mapping(
+                    getattr(obj['PatientMainDicomTags'], 'PatientBirthDate', ""),
+                ),
+                'timePeriodCoveredEnd': self.__date_mapping(
+                    getattr(obj['PatientMainDicomTags'], 'PatientBirthDate', "")
+                )}],
         }
