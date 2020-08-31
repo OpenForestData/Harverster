@@ -241,8 +241,8 @@ class OrthancClient(HarvestingClient):
             try:
                 date_string = datetime.strptime(date_value, '%Y%m%d').strftime('%Y-%m-%d')
                 return date_string
-            except ValueError as e:
-                logger.debug(f'Orthanc __date_mapping method returned error: {e}')
+            except ValueError as err:
+                logger.debug(f'Orthanc __date_mapping method returned error: {err}')
         return datetime.now().strftime('%Y-%m-%d')
 
     @staticmethod
