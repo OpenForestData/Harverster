@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+from datetime import datetime
 from typing import List
 
 import pytz
@@ -329,6 +330,16 @@ class GeonodeClient(HarvestingClient):
 
         return service_url + detail_url
 
+    @staticmethod
+    def __keywords_mapping(obj: list) -> list:
+        """
+        Maps keywords on compatible list of objects for dataverse Resource
+
+        :param obj: list of keywords from geonode api
+        :return: mapped keywords
+        """
+        return [{'keywordValue': value, 'keywordVocabulary': '', 'keywordVocabularyURI': ''} for value in obj]
+
     def __base_mapping(self, obj: dict) -> dict:
         """
         Map raw data to compatible format for dataverse Resource
@@ -347,6 +358,11 @@ class GeonodeClient(HarvestingClient):
                                 'datasetContactName': obj['owner_name']}],
             'dataSources': ['Geonode'],
             'subject': ['Earth and Environmental Sciences'],
+            'keywords': self.__keywords_mapping(obj['keywords']),
+            'timePeriodCovered': [
+                {'timePeriodCoveredStart': getattr(obj, 'temporal_extent_start', datetime.now().strftime('%Y-%m-%d')),
+                 'timePeriodCoveredEnd': getattr(obj, 'temporal_extent_end', datetime.now()).strftime('%Y-%m-%d')}],
+            'kindOfData': [str(obj['spatial_representation_type'])],
         }
 
     @staticmethod
