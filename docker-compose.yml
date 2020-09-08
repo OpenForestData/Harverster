@@ -41,8 +41,6 @@ services:
     container_name: "harvester_redis"
     image: "redis:6-alpine"
     restart: unless-stopped
-    labels:
-        - com.centurylinklabs.watchtower.enable=false
     networks:
       - harvester_network
 
@@ -54,7 +52,7 @@ services:
     restart: unless-stopped
     volumes:
       - ./:/app/
-      - admin_statics:/usr/local/lib/python3.8/site-packages/django/contrib/admin/static/
+      - admin_statics:/static-backend/
     environment:
       - DEBUG=True
       - SECRET_KEY=SECRET_KEY_REPLACE
