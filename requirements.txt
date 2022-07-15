@@ -10,5 +10,5 @@ psycopg2-binary==2.8.5
 sqlparse==0.2.4
 django-environ==0.4.5
 django-celery-beat==2.0.0
-django-celery-results==1.2.1
+django-celery-results==2.4.0
 pyDatavers@git+https://gitlab.whiteaster.com/public_data/pydataverse-upgrade.git
